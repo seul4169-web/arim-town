@@ -364,7 +364,7 @@
     if(nb){nc.style.display="block";nc.innerHTML=`<h3>🎉 새 건물이 문을 열었어요!</h3><span class="big">${nb.emoji} ${nb.name}</span><button class="hbtn" id="newGo" style="background:${nb.color}">구경하러 가기</button>`;g("newGo").onclick=()=>{M.newly="";save();goPlace(nb.key);};}
     else nc.style.display="none";
     const tc=g("tpCard"),H=window.HOSP;
-    if(tc&&!studied()){const a=sdGet();tc.style.display="block";tc.innerHTML=`<h3>📚 오늘의 공부</h3>공부를 마치면 병원과 마을 문이 열려요.<br><b style="font-family:Jua;font-weight:normal">${SKEY.map((s,i)=>SUB[s][0]+" "+a[i]+"/"+SN).join(" · ")}</b><button class="hbtn" id="skGoH" style="background:#3d8fd6">공부방 가기 ▶</button>`;g("skGoH").onclick=()=>{SFX("pop");M.at="k";save();goPlace("k");};}
+    if(tc&&!studied()){const a=sdGet();tc.style.display="block";tc.innerHTML=`<h3>📚 오늘의 공부</h3>공부를 마치면 병원과 마을 문이 열려요.<br><b style="font-family:Jua;font-weight:normal">${SKEY.map((s,i)=>SUB[s][0]+" "+a[i]+"/"+SNS[s]).join(" · ")}</b><button class="hbtn" id="skGoH" style="background:#3d8fd6">공부방 가기 ▶</button>`;g("skGoH").onclick=()=>{SFX("pop");M.at="k";save();goPlace("k");};}
     else if(tc&&H){const k=H.tpn();tc.style.display="block";
       tc.innerHTML=k>=H.total?`<h3>📋 오늘의 일정</h3>오늘 할 일 ${H.total}가지를 모두 마쳤어요 💮`:`<h3>📋 오늘의 일정</h3>병원에서 오늘 할 일이 기다려요. <b style="font-family:Jua;font-weight:normal">${k} / ${H.total}</b><button class="hbtn" id="tpGo" style="background:#f77fae">시작하기 ▶</button>`;
       const b=g("tpGo");if(b)b.onclick=()=>{SFX("pop");goPlace("h");H.open();};}
