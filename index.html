@@ -520,6 +520,12 @@
   #mapsvg.pic .slk{opacity:.8;filter:grayscale(1) brightness(1.08)}
   #mapsvg.pic image{image-rendering:auto}
 
+  /* 그림 배경 */
+  .banner{display:block;width:100%;max-width:640px;height:min(32vh,260px);object-fit:cover;object-position:50% 40%;border-radius:22px;margin:8px auto 12px;box-shadow:0 4px 0 #00000018}
+  #ph .cin{background:none;isolation:isolate}
+  #ph .cin::before{content:"";position:absolute;inset:0;z-index:-1;background:url(map/in_corr.webp) 0 100%/auto 100% repeat-x;filter:hue-rotate(var(--hr,0deg))}
+  #ph .corr[data-f="2"]{--hr:28deg}#ph .corr[data-f="3"]{--hr:55deg}#ph .corr[data-f="4"]{--hr:150deg}#ph .corr[data-f="5"]{--hr:205deg}#ph .corr[data-f="6"]{--hr:265deg}#ph .corr[data-f="0"]{--hr:320deg}
+
   body.bg-j{background:linear-gradient(#ffe3ec 0,#fff3ea 420px,#fff9f1 421px)}
   body.bg-home{background:linear-gradient(#bfe4ff 0,#e6f5ff 55%,#d9f0cf 55.1%,#e9f7e2 100%)}
   .place{display:none}.place.on{display:block}
@@ -809,17 +815,17 @@ window.onProg=function(k,n,t,r,p){
   const left=()=>dayLocked()?0:limitMin()*60+T.x-T.s;
   function draw(){
     const dl=dayLocked(),l=Math.max(0,left()),c=g("tchip"),pre=!dl&&window.TOWN&&!TOWN.studied();
-    c.textContent=dl?"🌙 오늘은 쉬는 날":pre?"📚 공부 먼저! 그다음 "+Math.ceil(l/60)+"분":"⏰ 오늘 남은 시간 "+Math.ceil(l/60)+"분";c.classList.toggle("low",!pre&&l<=120);
+    c.textContent=window.ARIM_PV?"🔓 확인 모드 (전부 열림)":dl?"🌙 오늘은 쉬는 날":pre?"📚 공부 먼저! 그다음 "+Math.ceil(l/60)+"분":"⏰ 오늘 남은 시간 "+Math.ceil(l/60)+"분";c.classList.toggle("low",!pre&&l<=120);
     g("lockT").textContent=dl?"오늘은 아림 마을이 쉬는 날이에요":"오늘 놀이 시간이 끝났어요";
     g("lockP").textContent=dl?"마을 친구들도 오늘은 푹 쉬어요.":"오늘도 "+limitMin()+"분 동안 열심히 했어요!";
     g("pbtn").textContent=dl?"보호자용 · 오늘 잠금 풀기":"보호자용 · 10분 더 주기";
-    const was=g("lock").classList.contains("on");g("lock").classList.toggle("on",l<=0);
+    const was=g("lock").classList.contains("on");g("lock").classList.toggle("on",l<=0&&!window.ARIM_PV);
     if(l<=0&&!was){saveT();document.querySelectorAll(".sheet,.ov").forEach(s=>s.classList.remove("open","on"));}
   }
   setInterval(()=>{
     if(document.visibilityState!=="visible")return;
     if(T.d!==today())T={d:today(),s:0,x:0};
-    if(left()>0&&(!window.TOWN||TOWN.studied())){T.s++;if(T.s%5===0)saveT();}
+    if(left()>0&&!window.ARIM_PV&&(!window.TOWN||TOWN.studied())){T.s++;if(T.s%5===0)saveT();}
     draw();
   },1000);
   document.addEventListener("visibilitychange",saveT);
@@ -835,6 +841,7 @@ window.onProg=function(k,n,t,r,p){
     c.innerHTML=`<h2>⚙️ 보호자 설정</h2><div class="lab">오늘 쓴 시간 ${used}분 · 하루 ${limitMin()}분${RC.limitMin>0?" (원격 설정)":""}</div>
       <div class="avrow"><b>하루 사용 시간</b><div>${[10,15,20,30].map(v=>`<button class="chipb${(CT.limit||20)===v?" on":""}" data-lim="${v}">${v}분</button>`).join("")}</div></div>
       <div class="avrow"><b>오늘</b><div>${dayLocked()?`<button class="chipb" id="pcUn">오늘 잠금 풀기</button>`:`<button class="chipb" id="pcLock">오늘은 그만 쓰기 (지금 잠그기)</button>`}</div></div>
+      <div class="avrow"><b>확인 모드</b><div><button class="chipb${window.ARIM_PV?" on":""}" id="pcPv">${window.ARIM_PV?"확인 모드 끄기":"전부 열어서 둘러보기"}</button><div class="lab">모든 건물·방이 열리고 시간도 줄지 않아요. 앱을 닫으면 저절로 꺼져요. 아림이 기록은 그대로예요.</div></div></div>
       ${window.TOWN&&!TOWN.studied()?`<div class="avrow"><b>오늘 공부</b><div><button class="chipb" id="pcSkip">오늘은 공부 건너뛰기</button></div></div>`:""}
       ${window.TOWN&&TOWN.nextBld()?`<div class="avrow"><b>잠긴 건물</b><div><button class="chipb" id="pcOpen">${TOWN.nextBld()} 미리 열기</button></div></div>`:""}
       <div class="avrow"><b>다른 기기와 이어하기</b><div id="pcSync"></div></div>
@@ -850,6 +857,7 @@ window.onProg=function(k,n,t,r,p){
     const lk=g("pcLock");if(lk)lk.onclick=()=>{CT.lockDay=pd();CT.unlockDay="";saveC();g("tk").classList.remove("on");draw();};
     const un=g("pcUn");if(un)un.onclick=()=>{CT.unlockDay=pd();CT.lockDay="";saveC();draw();panel();};
     g("pcClose").onclick=()=>g("tk").classList.remove("on");
+    const pv=g("pcPv");if(pv)pv.onclick=()=>{TOWN.preview(!window.ARIM_PV);draw();panel();};
     const sk=g("pcSkip");if(sk)sk.onclick=()=>{TOWN.skipStudy();draw();panel();};
     const po=g("pcOpen");if(po)po.onclick=()=>{TOWN.openNext();panel();};
   }
@@ -872,7 +880,8 @@ window.addEventListener("hashchange",fromHash);
   let M={log:{},rvDay:0,rv:0,talk:{},bodyDay:0,body:0,open:{},newly:"",spent:0,inv:{},park:[]};
   const STEP=40,BLD=[];
   const pts=()=>Object.values(window.PTS||{}).reduce((a,b)=>a+(b||0),0);
-  const isOpen=k=>k==="home"||k==="h"||k==="j"||k==="p"||k==="s"||k==="k"||M.open[k]!==undefined;
+  try{window.ARIM_PV=sessionStorage.getItem("arim-pv")==="1"||/[?&#]preview/.test(location.href);}catch(e){}
+  const isOpen=k=>!!window.ARIM_PV||k==="home"||k==="h"||k==="j"||k==="p"||k==="s"||k==="k"||M.open[k]!==undefined;
   function unlock(){
     const nx=BLD.find(b=>M.open[b.key]===undefined);if(!nx)return;
     const opened=Object.values(M.open);
@@ -950,7 +959,7 @@ window.addEventListener("hashchange",fromHash);
   const three=(ans,c)=>{const r=[ans];for(const v of shuffle(c)){if(v>=0&&!r.includes(v))r.push(v);if(r.length===3)break;}let k=1;while(r.length<3){if(!r.includes(ans+k))r.push(ans+k);k++;}return shuffle(r);};
   (window.PLN=window.PLN||{}).s="shop";(window.PBG=window.PBG||{}).s="#fff0cf";
   const sp=document.createElement("div");sp.className="place";sp.id="ps";
-  sp.innerHTML=`<button class="backhome" onclick="goPlace('home')">← 🏘️ 아림 마을</button><header class="bh"><h1 style="color:#c98209">🛍️ 꾸미기 가게</h1><div class="prog"><span class="rank" id="shBal"></span><span id="shHave"></span></div></header><main><div class="stamps" style="margin:0 0 10px">문제를 풀어 모은 별로 물건을 사서, 마을 공원에 놓아 봐!</div><div class="shopgrid" id="shGrid"></div><div class="stamps" style="margin:18px 0 10px">🐾 아림이를 따라다니는 친구를 데려와 봐!</div><div class="shopgrid" id="shPets"></div></main>`;
+  sp.innerHTML=`<button class="backhome" onclick="goPlace('home')">← 🏘️ 아림 마을</button><header class="bh"><h1 style="color:#c98209">🛍️ 꾸미기 가게</h1><img class="banner" src="map/in_shop.webp" alt=""><div class="prog"><span class="rank" id="shBal"></span><span id="shHave"></span></div></header><main><div class="stamps" style="margin:0 0 10px">문제를 풀어 모은 별로 물건을 사서, 마을 공원에 놓아 봐!</div><div class="shopgrid" id="shGrid"></div><div class="stamps" style="margin:18px 0 10px">🐾 아림이를 따라다니는 친구를 데려와 봐!</div><div class="shopgrid" id="shPets"></div></main>`;
   document.body.insertBefore(sp,g("rv"));
   function drawShop(){
     g("shBal").textContent="⭐ 쓸 수 있는 별 "+bal();
@@ -1135,8 +1144,8 @@ window.addEventListener("hashchange",fromHash);
   let walking=false;
   /* 그림 지도: 배경(base) + 건물 그림(b_*) + 앞 장식(top) */
   const MW=1672,MH=941;
-  const MB={h:[517,0,638,314],p:[139,19,299,295],e:[1174,39,459,295],v:[298,254,339,276],k:[19,392,300,295],c:[995,254,379,276]},MHOME=[1313,392,359,314];
-  const MF={h:[833,268],p:[334,272],e:[1338,282],v:[502,490],k:[251,636],c:[1154,482],s:[159,376],f:[1471,404],u:[205,896],l:[1466,896]},MHF=[1451,628];
+  const MB={s:[42,740,215,188],f:[1412,729,227,201],u:[372,-4,211,170],l:[1066,-6,198,170],h:[517,0,638,314],p:[139,19,299,295],e:[1174,39,459,295],v:[298,254,339,276],k:[19,392,300,295],c:[995,254,379,276]},MHOME=[1313,392,359,314];
+  const MF={h:[833,268],p:[334,272],e:[1338,282],v:[502,490],k:[251,636],c:[1154,482],s:[278,912],f:[1392,912],u:[478,190],l:[1165,188]},MHF=[1451,628];
   const mfront=k=>MF[k]||MHF;
   const lab2=(x,y,t,col,lock)=>`<g transform="translate(${x},${y}) scale(1.9)">${pill(0,0,t,col,lock)}</g>`;
   const sign=(x,y,e,col)=>`<g transform="translate(${x},${y})"><ellipse cx="0" cy="3" rx="36" ry="10" fill="#000" opacity=".16"/><rect x="-6" y="-46" width="12" height="50" rx="3" fill="#8a5a33"/><rect x="-46" y="-108" width="92" height="66" rx="12" fill="#fff7e6" stroke="${col}" stroke-width="6"/><text x="0" y="-60" font-size="42" text-anchor="middle">${e}</text></g>`;
@@ -1149,7 +1158,7 @@ window.addEventListener("hashchange",fromHash);
     Object.keys(LOT).forEach(k=>{const b=info(k);if(!b)return;const open=isOpen(k),sl=open&&!gate(k),B=MB[k],F=MF[k];let gfx,top,d;
       if(B&&open){gfx=`<image href="map/b_${k}.webp" x="${B[0]}" y="${B[1]}" width="${B[2]}" height="${B[3]}"/>`;top=[B[0]+B[2]/2,Math.max(46,B[1]+34)];d=B[1]+B[3];}
       else{gfx=sign(F[0],F[1]-28,open?b.emoji:"🚧",open?b.color:"#b9b2a9");top=[F[0],F[1]-150];d=F[1];}
-      (B&&open?items:signs).push({d:d,s:`<g class="bd${sl?" slk":""}" data-b="${k}">${gfx}</g>`});
+      (B&&open&&k!=="s"&&k!=="f"?items:signs).push({d:d,s:`<g class="bd${sl?" slk":""}" data-b="${k}">${gfx}</g>`});
       lab.push(`<g class="bd" data-b="${k}">${lab2(top[0],top[1],MAPN[k],open&&!sl?b.color:"#b9b2a9",!open||sl)}${k==="k"&&!studied()?`<g class="bob">${lab2(top[0]+30,top[1]-50,"여기부터!","#e8504f",false)}</g>`:""}</g>`);
     });
     items.push({d:MHOME[1]+MHOME[3],s:`<g class="bd" data-home="1"><image href="map/b_home.webp" x="${MHOME[0]}" y="${MHOME[1]}" width="${MHOME[2]}" height="${MHOME[3]}"/></g>`});
@@ -1226,7 +1235,7 @@ window.addEventListener("hashchange",fromHash);
   const SN=5,SUB={k:["가","한글","#f08aa6"],m:["🔢","연산","#5aa9e6"],e:["🔤","영어","#58b88f"]},SKEY=["k","m","e"];
   const sdGet=()=>{const v=M.sd||0;if(Math.floor(v/216)!==day())return [0,0,0];const r=v%216;return [Math.floor(r/36),Math.floor(r/6)%6,r%6];};
   const sdSet=a=>{M.sd=day()*216+a[0]*36+a[1]*6+a[2];save();};
-  const studied=()=>M.skip===day()||sdGet().every(n=>n>=SN);
+  const studied=()=>!!window.ARIM_PV||M.skip===day()||sdGet().every(n=>n>=SN);
   const gate=k=>k==="home"||k==="k"||studied();
   const pick=a=>a[Math.floor(Math.random()*a.length)];
   const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
@@ -1235,16 +1244,14 @@ window.addEventListener("hashchange",fromHash);
   (window.PLN=window.PLN||{}).k="study";(window.PBG=window.PBG||{}).k="#e3f1ff";
 
   /* --- 한글: 겹받침 --- */
-  const KR={"ㄺ":"ㄺ 받침은 <b>ㄱ</b>만 소리 나요.","ㄻ":"ㄻ 받침은 <b>ㅁ</b>만 소리 나요.","ㄼ":"ㄼ 받침은 <b>ㄹ</b>만 소리 나요.","ㅄ":"ㅄ 받침은 <b>ㅂ</b>만 소리 나요.","ㄵ":"ㄵ 받침은 <b>ㄴ</b>만 소리 나요.","ㄶ":"ㄶ 받침은 <b>ㄴ</b>이 소리 나고, ㅎ은 뒤 글자를 거세게 해요.","ㅀ":"ㅀ 받침은 <b>ㄹ</b>이 소리 나고, ㅎ은 뒤 글자를 거세게 해요.","ㄳ":"ㄳ 받침은 <b>ㄱ</b>만 소리 나요.","ㄾ":"ㄾ 받침은 <b>ㄹ</b>만 소리 나요.","밟":"‘밟다’는 특별해요. <b>ㅂ</b>이 소리 나요.","이":"뒤에 ㅇ이 오면, 받침 하나가 뒤로 넘어가요.","ㅎ":"뒤에 ㅇ이 오면, ㅎ은 소리가 사라져요."};
-  const KSND=[["닭","닥",["달","닫"],"ㄺ"],["흙","흑",["흘","흡"],"ㄺ"],["읽다","익따",["일따","이따"],"ㄺ"],["맑다","막따",["말따","마따"],"ㄺ"],["밝다","박따",["발따","바따"],"ㄺ"],["삶","삼",["살","삽"],"ㄻ"],["닮다","담따",["달따","닥따"],"ㄻ"],["젊다","점따",["절따","적따"],"ㄻ"],["굶다","굼따",["굴따","국따"],"ㄻ"],["여덟","여덜",["여덥","여던"],"ㄼ"],["넓다","널따",["넙따","너따"],"ㄼ"],["짧다","짤따",["짭따","짜따"],"ㄼ"],["값","갑",["갓","각"],"ㅄ"],["없다","업따",["엇따","얼따"],"ㅄ"],["앉다","안따",["앗따","알따"],"ㄵ"],["많다","만타",["만다","마다"],"ㄶ"],["싫다","실타",["실다","시타"],"ㅀ"],["끓다","끌타",["끌다","끄타"],"ㅀ"],["앓다","알타",["알다","아타"],"ㅀ"],["몫","목",["못","몹"],"ㄳ"],["핥다","할따",["핫따","하따"],"ㄾ"],["밟다","밥따",["발따","바따"],"밟"]];
-  const KLNK=[["읽어요","일거요",["익어요","이거요"],"이"],["앉아요","안자요",["안아요","아자요"],"이"],["없어요","업써요",["어버요","업어요"],"이"],["닭이","달기",["다기","닥이"],"이"],["흙을","흘글",["흐글","흑을"],"이"],["값이","갑씨",["가비","갑이"],"이"],["젊어요","절머요",["저머요","점어요"],"이"],["넓어요","널버요",["너버요","널어요"],"이"],["밟아요","발바요",["바바요","발아요"],"이"],["맑아요","말가요",["마가요","막아요"],"이"],["짧아요","짤바요",["짜바요","짤아요"],"이"],["삶아요","살마요",["사마요","삼아요"],"이"],["많아요","마나요",["만하요","만아요"],"ㅎ"],["싫어요","시러요",["실허요","실어요"],"ㅎ"],["끓어요","끄러요",["끌허요","끌어요"],"ㅎ"]];
+  const KREAD=[["닭이 꼬끼오 울어요.","🐔",["🐶","🐱"]],["의자에 앉아요.","🪑",["🛏️","🚲"]],["그림책을 읽어요.","📖",["⚽","🎨"]],["흙에 씨앗을 심어요.","🌱",["🍞","🧦"]],["물이 보글보글 끓어요.","🫖",["🧊","🌂"]],["사과가 여덟 개 있어요.","8️⃣",["5️⃣","3️⃣"]],["달걀을 삶아요.","🥚",["🍌","🍪"]],["강아지가 손을 핥아요.","🐶",["🐟","🐦"]],["밝은 달이 떴어요.","🌕",["☔","🌈"]],["낙엽을 밟아요.","🍂",["🌊","❄️"]],["얇은 종이를 접어요.","📄",["🧱","🛏️"]],["맑은 하늘에 해가 떴어요.","☀️",["🌧️","⛄"]],["모기에 물려 팔을 긁어요.","🦟",["🐘","🐳"]],["굵은 나무에 올라가요.","🌳",["🌷","🍄"]],["넓은 바다에서 수영해요.","🌊",["🛁","🥤"]],["짧은 연필로 글씨를 써요.","✏️",["🥄","🔑"]],["감기를 앓아서 누워 있어요.","🤒",["😆","🤸"]],["싫어서 고개를 저어요.","🙅",["🙆","🙋"]],["젊은 삼촌이 자전거를 타요.","🚲",["🚀","⛵"]],["값을 내고 우유를 사요.","🥛",["🌙","🌋"]]];
   const KFILL=[["하늘이 ○○.","맑다",["막다","말다"],"☀️"],["의자에 ○○.","앉다",["안다","않다"],"🪑"],["그림책을 ○○.","읽다",["익다","일다"],"📖"],["운동장이 아주 ○○.","넓다",["널다","넙다"],"🏟️"],["몽당연필은 ○○.","짧다",["짤다","짭다"],"✏️"],["사탕이 아주 ○○.","많다",["만다","맣다"],"🍬"],["물이 보글보글 ○○.","끓다",["끌다","끅다"],"🫖"],["주머니에 돈이 ○○.","없다",["업다","엇다"],"👛"],["나는 엄마와 ○○.","닮다",["담다","달다"],"👩‍👧"],["모기 물린 곳을 ○○.","긁다",["극다","글다"],"🦟"],["보름달이 환하게 ○○.","밝다",["박다","발다"],"🌕"],["낙엽을 발로 ○○.","밟다",["밥다","발다"],"🍂"],["쓴 약은 ○○.","싫다",["실다","실타"],"💊"],["종이는 아주 ○○.","얇다",["얄다","얍다"],"📄"],["나무 줄기가 ○○.","굵다",["국다","굴다"],"🌳"],["감기를 ○○.","앓다",["알다","않다"],"🤒"],["강아지가 손을 ○○.","핥다",["할다","핧다"],"🐶"],["넘어졌지만 ○○○.","괜찮다",["괜찬다","괜찮타"],"🩹"],["달걀을 ○○.","삶다",["삼다","살다"],"🥚"],["아빠는 아직 ○○.","젊다",["점다","절다"],"👨"]];
   const KPIC=[["🐔","꼬끼오! 무엇일까?","닭",["닥","닦"]],["8️⃣","이 수를 한글로 쓰면?","여덟",["여덜","여덥"]],["🪴","화분 속에 있는 것은?","흙",["흑","흘"]],["🏷️","물건이 얼마인지 알려 주는 것은?","값",["갑","갓"]],["🥚","달걀을 물에 넣고 익히는 것은?","삶기",["삼기","살기"]],["🪑","다리가 아플 때 의자에…","앉아요",["안자요","않아요"]],["📖","책을 펴고 글자를…","읽어요",["일거요","익어요"]],["🍕","피자를 똑같이 나눈 내 것은? 내 ○","몫",["목","못"]]];
   let kUsed={};
   const kNew=(L,t)=>{let c=L.filter(x=>!kUsed[t+x[0]]);if(!c.length){L.forEach(x=>{delete kUsed[t+x[0]];});c=L;}const x=pick(c);kUsed[t+x[0]]=1;return x;};
   function kGen(i){
-    const t=["s","f","p","l","f"][i%5];
-    if(t==="s"||t==="l"){const x=kNew(t==="s"?KSND:KLNK,t);return mkQ(`<div class="skbig">${x[0]}</div><div class="skq">어떻게 소리 날까?</div>`,"["+x[1]+"]",x[2].map(w=>"["+w+"]"),`<b>${x[0]}</b> → [${x[1]}]<br>${KR[x[3]]}`);}
+    const t=["r","f","p","r","f"][i%5];
+    if(t==="r"){const x=kNew(KREAD,t);return mkQ(`<div class="skbig sm">${x[0]}</div><div class="skq">읽고, 맞는 그림을 골라요</div>`,x[1],x[2],`<b>${x[0]}</b> ${x[1]}`,{em:1});}
     if(t==="f"){const x=kNew(KFILL,t);return mkQ(`<div class="skem">${x[3]}</div><div class="skbig sm">${x[0]}</div><div class="skq">○에 들어갈, 바르게 쓴 말은?</div>`,x[1],x[2],`<b>${x[0].replace(/○+/,x[1])}</b>`);}
     const x=kNew(KPIC,"p");return mkQ(`<div class="skem">${x[0]}</div><div class="skq">${x[1]}</div>`,x[2],x[3],`바르게 쓰면 <b>${x[2]}</b>`);
   }
@@ -1307,7 +1314,7 @@ window.addEventListener("hashchange",fromHash);
   const dots=(n,col)=>`<span class="skdots">${[0,1,2,3,4].map(i=>`<i style="${i<n?"background:"+col:""}"></i>`).join("")}</span>`;
   function drawStudy(){
     SK=null;const a=sdGet(),done=studied(),el=g("skMain");
-    el.innerHTML=`<div class="skhead">${done?"💮 오늘 공부 끝! 마을 문이 열렸어요":"세 가지를 다 하면 마을 문이 열려요 🔓"}</div>
+    el.innerHTML=`<img class="banner" src="map/in_study.webp" alt=""><div class="skhead">${done?"💮 오늘 공부 끝! 마을 문이 열렸어요":"세 가지를 다 하면 마을 문이 열려요 🔓"}</div>
       <div class="skgrid">${SKEY.map((k,i)=>`<button class="sksub${a[i]>=SN?" ok":""}" data-s="${k}" style="--c:${SUB[k][2]}"><span class="e">${SUB[k][0]}</span><b>${SUB[k][1]}</b>${dots(a[i],SUB[k][2])}<small>${a[i]>=SN?"✅ 다 했어요":a[i]+" / "+SN}</small></button>`).join("")}</div>
       <div class="skstamp${done?" on":""}"><span>${done?"💮":"🔒"}</span>${done?"출근 도장 쾅!":"출근 도장"}</div>
       ${done?`<button class="hbtn" id="skHome" style="background:#2fa38a">🏘️ 마을로 가기</button>`:""}`;
@@ -1365,7 +1372,7 @@ window.addEventListener("hashchange",fromHash);
     const go=g("rvGo");if(go)go.onclick=openReview;
     g("hstat").textContent="🌟 마을 별 "+pts()+" · ⭐ 복습 별 "+M.rv;
   }
-  window.TOWN={studied:studied,gate:gate,_gen:SGEN,drawStudy:()=>drawStudy(),skipStudy:()=>{M.skip=day();save();homeDraw();},meSvg:meSvg,hasPet:()=>!!(M.pet&&M.pets[M.pet]),
+  window.TOWN={preview:on=>{window.ARIM_PV=!!on;try{sessionStorage.setItem("arim-pv",on?"1":"0");}catch(e){}homeDraw();},studied:studied,gate:gate,_gen:SGEN,drawStudy:()=>drawStudy(),skipStudy:()=>{M.skip=day();save();homeDraw();},meSvg:meSvg,hasPet:()=>!!(M.pet&&M.pets[M.pet]),
     reg:(k,f)=>{BANK[k]=f;},
     solved:(id,w)=>{if(!M.log[id]){M.log[id]={d:day(),w:w||0};save();}},
     talkDone:k=>!!M.talk[k],
@@ -2160,10 +2167,8 @@ function sceneSvg(id){
    <linearGradient id="gS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".1"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient>
    <clipPath id="cF"><path d="${FP}"/></clipPath>
    <filter id="sh" x="-4%" y="-4%" width="110%" height="112%"><feDropShadow dx="1.4" dy="2.4" stdDeviation="1.3" flood-color="#28303c" flood-opacity=".26"/></filter></defs>
-   <path d="M0 0H360L342 10H18z" fill="${C[2]}"/><path d="M0 0L18 10V141L0 160z" fill="${C[1]}"/><path d="M360 0L342 10V141L360 160z" fill="${C[1]}"/>
-   <rect x="18" y="10" width="324" height="131" fill="${C[0]}"/><rect x="18" y="10" width="324" height="131" fill="url(#gW)"/><rect x="18" y="10" width="26" height="131" fill="url(#gS)"/><rect x="316" y="10" width="26" height="131" fill="url(#gS)" transform="rotate(180 329 75.5)"/>
-   <path d="${FP}" fill="${C[3]}"/><path d="${fl}" stroke="${C[4]}" stroke-width="1" fill="none" clip-path="url(#cF)" opacity=".75"/><path d="${FP}" fill="url(#gF)"/>
-   <path d="M0 160L18 141H342L360 160" fill="none" stroke="${C[4]}" stroke-width="3.5" stroke-linejoin="round"/><path d="M18 10V139M342 10V139" stroke="#000" stroke-opacity=".1"/>
+   <svg x="0" y="0" width="360" height="141" viewBox="0 0 1672 704" preserveAspectRatio="none" style="filter:hue-rotate(${({1:0,2:35,3:185,4:-55,5:65,6:115,0:160})[DM[id].f]||0}deg)"><image href="map/in_room.webp" width="1672" height="941"/></svg>
+   <svg x="0" y="141" width="360" height="89" viewBox="0 704 1672 237" preserveAspectRatio="none"><image href="map/in_room.webp" width="1672" height="941"/></svg>
    <g transform="translate(18,6) scale(.9)"><g filter="url(#sh)">${S.svg.replace(/^(<rect [^>]*\/>){3}/,"")}${docG(S.doc[0],S.doc[1],SDOC[id]||S.hair,{mask:S.mask,long:(S.doc[0]+id.length)%2===0})}</g><g id="spt"></g><g id="smk"></g></g></svg>`;
 }
 function sceneMarks(id){
@@ -3462,7 +3467,7 @@ function schDraw(){
   if(n<SCHN&&o[n]==="enc"&&(!schRun||schRun.k!=="enc"))schRun={k:"enc",base:schCnt("enc")};
   $("liftp").querySelectorAll("[data-go]").forEach(b=>b.classList.toggle("today",n<SCHN&&o[n]==="enc"&&b.dataset.go===String(schFloor())));
   const b=$("schGo");if(b)b.onclick=()=>schStart();
-  $("bld").querySelectorAll(".room.sp").forEach(d=>d.classList.toggle("lock",n<SCHN));
+  $("bld").querySelectorAll(".room.sp").forEach(d=>d.classList.toggle("lock",n<SCHN&&!window.ARIM_PV));
 }
 function schStart(){
   const n=schN();$("schbar").classList.remove("on");if(n>=SCHN){go("tour");return;}
@@ -3481,7 +3486,7 @@ window.HOSP={tpn:schN,total:SCHN,open:schStart};
 
 /* 진료 준비: 내용을 먼저 보고 확인 문제를 풀어야 환자를 부를 수 있음 */
 let prep=null;
-const prepOk=id=>!!(st.pr&&st.pr[id]);
+const prepOk=id=>!!window.ARIM_PV||!!(st.pr&&st.pr[id]);
 function prepStart(id){enc=null;osel=null;if(!prep||prep.id!==id)prep={id:id,i:0,q:null};$("qbox").style.display="none";$("obox").style.display="block";sceneMarks(id);prepDraw();}
 function prepDraw(){
   const d=DM[prep.id],m=d.dz.length,n=m+2,i=prep.i,box=$("obox");

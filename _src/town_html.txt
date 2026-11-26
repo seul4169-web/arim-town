@@ -1,0 +1,12 @@
+<div class="place" id="pp">
+<button class="backhome" onclick="goPlace('home')">← 🏘️ 아림 마을</button>
+<header><h1>💊 아림 약국</h1><div class="prog"><span class="rank" id="ppRank"></span><span id="ppSt"></span></div></header>
+<nav>
+  <button data-g="count" class="on">🔢 약 세기</button>
+  <button data-g="clock">⏰ 약 시간</button>
+  <button data-g="cup">🥄 물약</button>
+</nav>
+<main><div class="qz" id="ppbox"></div><div class="stamps" id="ppinfo"></div></main>
+</div>
+<div class="ov" id="rv"><div class="ovc" id="rvc"></div></div>
+<div class="ov" id="tk"><div class="ovc" id="tkc"></div></div>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아림 산후조리원</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#33302e;--soft:#7d736c;--line:#e6ddd4;--accent:#ff8a65}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;color:var(--ink);font-family:'Gowun Dodum',sans-serif;background:linear-gradient(#ffe3ec 0,#fff3ea 420px,#fff9f1 421px);min-height:100vh}
+  button{font-family:inherit;color:inherit;cursor:pointer}
+  header{text-align:center;padding:16px 12px 4px}
+  .prog{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;font-size:14px;color:var(--soft)}
+  .prog span{background:#fff;border-radius:999px;padding:5px 11px;box-shadow:0 1px 0 #f0cfd8}
+  .prog .rank{font-family:'Jua',sans-serif;color:#b0661a;background:#fff3cf}
+  nav{display:flex;gap:6px;max-width:520px;margin:10px auto 0;padding:0 12px}
+  nav button{flex:1;font-family:'Jua',sans-serif;font-size:17px;border:none;border-radius:16px;padding:11px 4px;background:#ffffffb0;color:var(--soft)}
+  nav button.on{background:var(--accent);color:#fff;box-shadow:0 3px 0 #e46e4b}
+  main{max-width:520px;margin:0 auto;padding:10px 12px 40px}
+  .view{display:none}.view.on{display:block}
+  /* 건물 */
+  .sky{position:relative;height:26px}
+  .sky i{position:absolute;font-style:normal;font-size:24px;opacity:.9}
+  .sign{margin:0 20px;background:#f08aa6;color:#fff;border-radius:18px 18px 0 0;padding:10px 8px 8px;text-align:center;font-family:'Jua',sans-serif;font-size:25px;letter-spacing:1px;box-shadow:inset 0 -5px 0 #d96f8d}
+  .sign .cross{display:inline-block;background:#fff;color:#e8504f;border-radius:10px;width:36px;height:36px;line-height:36px;font-size:26px;margin-right:8px;vertical-align:-3px}
+  .sign small{display:block;font-size:13px;letter-spacing:1px;opacity:.9;font-family:'Gowun Dodum',sans-serif}
+  .bld{background:#fffdf9;border:3px solid #d9cfc4;border-radius:10px 10px 0 0;overflow:hidden;box-shadow:0 6px 0 #f3dcc9}
+  .floor{display:grid;grid-template-columns:44px 1fr;border-bottom:3px solid #d9cfc4}
+  .floor:last-child{border-bottom:none}
+  .fl{display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:19px;color:#fff;gap:4px;padding:4px 0}
+  .fl small{writing-mode:vertical-rl;font-size:12px;font-family:'Gowun Dodum',sans-serif;letter-spacing:1px;opacity:.95}
+  .rooms{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;padding:8px}
+  .room{position:relative;border:none;border-radius:12px 12px 4px 4px;padding:9px 2px 7px;text-align:center;min-height:78px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.07)}
+  .room:active{transform:translateY(2px)}
+  .room .e{font-size:32px;line-height:1.1}
+  .room .n{font-family:'Jua',sans-serif;font-size:16px;line-height:1.15;margin-top:3px;word-break:keep-all}
+  .room .st{display:none;position:absolute;top:-4px;right:-2px;font-size:17px}
+  .room.done .st{display:block}
+  .room.desk{background:#fff3cf!important;outline:2px dashed #e6b84d;outline-offset:-3px}
+  .ground{display:flex;justify-content:space-between;align-items:flex-end;font-size:28px;padding:6px 8px 0}
+  .hint{text-align:center;color:var(--soft);font-size:14px;margin-top:8px}
+  /* 안내 데스크 */
+  .qz{background:#fff;border-radius:24px;padding:18px;box-shadow:0 3px 0 var(--line)}
+  .pt{display:flex;gap:12px;align-items:flex-start}
+  .pt .face{font-size:56px;line-height:1}
+  .bubble{background:#fff3e8;border-radius:18px;padding:12px 14px;font-size:18px;line-height:1.55;flex:1}
+  .bubble b{font-family:'Jua',sans-serif;font-weight:normal}
+  .qtitle{font-family:'Jua',sans-serif;font-size:21px;margin:16px 0 8px;color:#d9603f}
+  .opts{display:grid;gap:8px}
+  .opt{border:none;border-radius:16px;padding:13px;font-family:'Jua',sans-serif;font-size:19px;background:#eef4ff;text-align:left}
+  .opt.right{background:#d8f5ea;color:#22795f}
+  .b-q .opt{background:#fff;font-size:17px}
+  .b-q .opt.right{background:#d8f5ea}
+  .b-q .opt.wrong{background:#f1ecea}
+  .opt.wrong{background:#f1ecea;color:#b9a99e;animation:shake .35s}
+  @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .msg{min-height:24px;margin-top:8px;font-size:16px;color:#a5624a}
+  .result{background:#eafaf4;border-radius:18px;padding:14px 16px;margin-top:12px;font-size:17px;line-height:1.55}
+  .result b{font-family:'Jua',sans-serif;font-weight:normal;font-size:20px;color:#22795f}
+  .stamps{text-align:center;font-size:16px;line-height:1.5;margin-top:12px;color:var(--soft)}
+  /* 시트 */
+  .sheet{position:fixed;inset:0;background:rgba(40,36,33,.4);display:none;align-items:flex-end;justify-content:center;z-index:10}
+  .sheet.open{display:flex}
+  .card{background:#fff;width:100%;max-width:520px;border-radius:26px 26px 0 0;padding:18px 18px 30px;max-height:90vh;overflow:auto;animation:up .25s ease-out}
+  @keyframes up{from{transform:translateY(40px);opacity:0}}
+  .top{display:flex;align-items:center;gap:12px}
+  .top .e{font-size:42px}
+  .top h2{font-family:'Jua',sans-serif;font-weight:normal;font-size:26px;margin:0;line-height:1.15;word-break:keep-all}
+  .top .en{font-size:14px;color:var(--soft)}
+  .top .where{display:inline-block;font-size:13px;background:#eef4ff;color:#3a6fb0;border-radius:999px;padding:2px 9px;margin-top:3px}
+  .x{margin-left:auto;border:none;background:#f5ece6;border-radius:50%;width:40px;height:40px;font-size:19px;flex:none}
+  .box{border-radius:18px;padding:13px 15px;margin-top:10px}
+  .box h3{font-family:'Jua',sans-serif;font-weight:normal;margin:0 0 5px;font-size:19px}
+  .box p{margin:0;font-size:18px;line-height:1.55}
+  .b-work{background:#e9f6ff}.b-work h3{color:#2d6aa8}
+  .b-q{background:#fff3e8}.b-q h3{color:#d9603f}
+  .tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .tool{background:#fff;border-radius:999px;padding:5px 10px;font-size:15px}
+  .dzh{font-family:'Jua',sans-serif;font-size:20px;color:#c2456f;margin:18px 0 8px}
+  details{background:#fff4f7;border-radius:16px;margin-bottom:8px;overflow:hidden}
+  summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;font-family:'Jua',sans-serif;font-size:19px;cursor:pointer}
+  summary::-webkit-details-marker{display:none}
+  summary .e{font-size:26px}
+  summary::after{content:"＋";margin-left:auto;color:#c2456f;font-size:18px}
+  details[open] summary::after{content:"－"}
+  .dzb{padding:0 14px 13px;font-size:17px;line-height:1.55}
+  .dzb div{margin-top:6px}
+  .dzb b{font-family:'Jua',sans-serif;font-weight:normal}
+  .dzb .s b{color:#c2456f}.dzb .c b{color:#2d6aa8}
+  .btn{font-family:'Jua',sans-serif;font-size:17px;border:none;border-radius:14px;padding:11px 15px;margin-top:10px;background:var(--accent);color:#fff}
+  .btn.soft{background:#ffe6a8;color:#93600d;margin-right:6px}
+  .btn.line{background:#eef4ff;color:#3a6fb0}
+  .ans{display:none;margin-top:10px;background:#eafaf4;border-radius:14px;padding:11px 13px}
+  .ans.show{display:block}
+  .ans .pr{font-family:'Jua',sans-serif;color:#2f9b7b;font-size:18px;margin-bottom:4px}
+  .ans p{font-size:17px}
+  .finish{display:none;text-align:center;background:#fff1c9;border-radius:22px;padding:16px;margin-top:16px}
+  .finish.show{display:block}
+  .finish h2{font-family:'Jua',sans-serif;font-weight:normal;margin:0 0 6px;color:#c8862a}
+  .reset{display:block;margin:18px auto 0;border:none;background:#ffffffa0;color:var(--soft);font-size:13px;border-radius:12px;padding:8px 12px}
+  .note{text-align:center;color:var(--soft);font-size:13px;margin-top:14px;line-height:1.5}
+
+  .item{background:#fff4f7;border-radius:16px;padding:12px 14px;margin-bottom:8px;font-size:17px;line-height:1.55}
+  .item b{display:block;font-family:'Jua',sans-serif;font-weight:normal;font-size:19px;margin-bottom:2px}
+  .clues{display:grid;gap:6px;margin-top:12px}
+  .clue{background:#f3f7ff;border-radius:12px;padding:9px 12px;font-size:17px}
+  .baby{font-size:64px;line-height:1;text-align:center}
+  .bname{text-align:center;font-family:'Jua',sans-serif;font-size:20px;margin-top:4px}
+
+  .go{display:block;text-align:center;text-decoration:none;font-family:'Jua',sans-serif;font-size:18px;border-radius:16px;padding:13px 12px;margin-top:12px;background:#fff;color:#c2456f;box-shadow:0 3px 0 #f0d3dc;border:2px solid #f6c3d1}
+  .go.h{color:#22795f;border-color:#bfe6da;box-shadow:0 3px 0 #cfe9e1}
+</style>
+</head>
+<body>
+<header>
+  <div class="prog"><span class="rank" id="pRank"></span><span id="pSt"></span><span id="pGd"></span></div>
+</header>
+<nav>
+  <button data-v="tour" class="on">🏠 조리원 구경</button>
+  <button data-v="desk">🍼 꼬마 간호사</button>
+</nav>
+<main>
+<section class="view on" id="vTour">
+  <div class="sky"><i style="left:8%;top:0">🌙</i><i style="right:10%;top:2px;font-size:18px">⭐</i><i style="left:48%;top:-4px;font-size:16px">⭐</i></div>
+  <div class="sign"><span class="cross" style="color:#f08aa6">♥</span>아림 산후조리원<small>ARIM POSTPARTUM CARE CENTER</small></div>
+  <div class="bld" id="bld"></div>
+  <div class="ground"><span>🌷</span><span>🚗</span><span>🧸</span><span>🌷</span></div>
+  <a class="go h" href="https://claude.ai/artifact/WqxfPwzg4wWc8MwcunJyRJ" target="_blank" rel="noopener">🏥 대학병원으로 돌아가기 →</a>
+  <div class="hint">방문을 눌러 들어가 봐! 퀴즈를 맞히면 견학 도장 💮을 받아요</div>
+  <div class="finish" id="finish">
+    <h2>🏅 신생아실 수간호사님!</h2>
+    <div>조리원의 모든 방을 견학했어요.<br>이제 신생아실에서 우는 아기들을 돌봐 줄까?</div>
+  </div>
+  <button class="reset" id="reset">처음부터 다시 견학하기</button>
+</section>
+<section class="view" id="vDesk">
+  <div class="qz" id="quiz"></div>
+  <div class="stamps" id="stamps"></div>
+</section>
+<div class="note">아기를 돌보는 방법은 아기마다 조금씩 달라요. 진짜 아기는 꼭 어른과 함께 돌봐요.</div>
+</main>
+<div class="sheet" id="sheet"><div class="card" id="card" role="dialog" aria-modal="true"></div></div>
+<script>
+
+const FL={3:["엄마 층","#f08aa6","#ffe9ef"],2:["아기 층","#f0a13c","#fff0d6"],1:["만남·돌봄 층","#57b6a0","#e3f6f1"]};
+const D=[
+{id:"mom",f:3,name:"산모 방",en:"Mom's Room",e:"🛏️",it:"🌸 엄마 몸은 지금",
+ say:"아기를 낳은 엄마가 쉬면서 몸을 회복하는 방이에요. 아기를 낳는 일은 마라톤을 뛰는 것만큼 힘이 들어요.",tools:["🛏️ 침대","🌡️ 체온계","☎️ 간호사 호출 벨"],
+ items:[["🍉","자궁이 돌아가요","아기가 자라던 방 '자궁'은 수박만큼 커졌다가, 6주쯤에 걸쳐 주먹만 한 크기로 천천히 돌아가요."],
+        ["💤","쪽잠을 자요","아기가 밤에도 2~3시간마다 먹어서 엄마는 밤잠이 모자라요. 그래서 낮에도 틈틈이 자요."],
+        ["👩‍👧","모자동실","아기를 신생아실에서 엄마 방으로 데려와 함께 지내는 시간이에요. 서로 얼굴과 냄새를 익혀요."]],
+ q:"엄마는 왜 조리원에서 푹 쉬어야 할까?",a:"아기를 낳느라 힘을 아주 많이 썼고, 커졌던 몸이 원래대로 돌아가는 중이기 때문이에요.",
+ o:["아기를 낳느라 힘을 많이 쓰고, 몸이 원래대로 돌아가는 중이라서","집에 침대가 없어서","엄마가 감기에 걸려서"]},
+{id:"dining",f:3,name:"식당",en:"Dining Room",e:"🍲",it:"🥄 엄마의 밥상",
+ say:"엄마가 하루 세 끼와 간식을 먹는 곳이에요. 엄마가 잘 먹어야 몸도 빨리 낫고 젖도 잘 나와요.",tools:["🍲 미역국","🥛 물과 국물","🍚 골고루 반찬"],
+ items:[["🌿","미역국","미역에는 피를 만드는 철분과 뼈를 튼튼하게 하는 칼슘이 많아요. 그래서 아기를 낳은 엄마는 미역국을 자주 먹어요."],
+        ["💧","물을 많이","엄마 젖(모유)은 대부분 물로 되어 있어요. 그래서 엄마는 물과 국물을 많이 마셔요."],
+        ["🥩","골고루","상처가 낫고 근육이 회복되려면 고기, 생선, 달걀, 두부 같은 단백질이 필요해요."]],
+ q:"우리는 왜 생일날 미역국을 먹을까?",a:"나를 낳고 미역국을 먹었던 엄마의 고마움을 기억하기 위해서예요.",
+ o:["나를 낳고 미역국을 먹은 엄마의 고마움을 기억하려고","미역을 먹어야 한 살을 더 먹어서","미역이 케이크보다 맛있어서"]},
+{id:"gym",f:3,name:"산후 체조실",en:"Recovery Exercise",e:"🧘",it:"🤸 이렇게 회복해요",
+ say:"엄마가 가벼운 체조와 마사지로 몸을 천천히 회복하는 곳이에요.",tools:["🧘 요가 매트","⚽ 짐볼","💆 마사지 침대"],
+ items:[["🐢","천천히 체조","처음에는 누워서 숨쉬기, 발목 돌리기처럼 아주 가벼운 운동부터 시작해요."],
+        ["🔗","느슨해진 관절","임신하면 '릴랙신'이라는 호르몬이 나와서 뼈와 뼈 사이를 느슨하게 해요. 아기가 나올 길을 넓히려는 거예요."],
+        ["🦵","붓기 빼기","아기를 낳고 나면 다리와 발이 퉁퉁 붓기도 해요. 마사지와 걷기가 도움이 돼요."]],
+ q:"아기를 낳은 엄마는 왜 무거운 물건을 들면 안 될까?",a:"관절이 아직 느슨하고 근육이 약해져 있어서 다치기 쉬워요.",
+ o:["관절과 근육이 아직 느슨하고 약해져 있어서","힘이 너무 세져서 물건이 부서져서","손이 미끄러워서"]},
+{id:"class",f:3,name:"부모 교실",en:"Parent Class",e:"📚",it:"✏️ 이런 걸 배워요",
+ say:"엄마 아빠가 아기 돌보는 법을 배우는 교실이에요. 엄마 아빠도 처음엔 다 초보예요!",tools:["🧸 연습용 아기 인형","🧷 기저귀","🌯 속싸개"],
+ items:[["🌯","속싸개 싸기","아기를 천으로 포근하게 감싸요. 좁고 따뜻했던 엄마 배 속 같아서 아기가 편안해해요."],
+        ["🤲","안는 법","한 손으로 머리와 목을, 다른 손으로 엉덩이를 받쳐서 안아요."],
+        ["💩","똥 색깔 읽기","아기의 첫 똥 '태변'은 까맣고 끈적해요. 며칠 지나면 초록빛을 거쳐 노란 똥으로 바뀌어요."],
+        ["🚗","카시트","집에 갈 때 아기는 꼭 카시트에 뒤를 보고 타요."]],
+ q:"신생아를 안을 때 머리와 목을 꼭 받쳐야 하는 이유는?",a:"아기는 목 근육이 약해서 무거운 머리를 스스로 가누지 못해요. 서너 달쯤 지나야 목을 가눠요.",
+ o:["목 근육이 약해서 무거운 머리를 스스로 못 가눠서","머리카락이 헝클어져서","아기가 간지럼을 타서"]},
+{id:"nursery",f:2,name:"신생아실",en:"Nursery",e:"👶",it:"🔎 신생아 몸의 비밀",
+ say:"아기들이 투명한 아기 침대에 누워 지내는 방이에요. 간호사 선생님이 밤낮으로 돌봐 줘요. 태어난 지 한 달이 안 된 아기를 '신생아'라고 해요.",tools:["🛏️ 투명 아기 침대","🏷️ 이름표 발찌","🌯 속싸개"],
+ items:[["🫧","숨구멍 (대천문)","머리 위쪽에 뼈가 아직 붙지 않아 말랑한 곳이 있어요. 살살 만지면 콩닥콩닥 뛰는 게 느껴져요. 돌이 지나면서 천천히 닫혀요."],
+        ["🪢","탯줄","배꼽에 남은 탯줄은 까맣게 말라서 1~2주쯤 지나면 저절로 톡 떨어져요. 그 자리가 배꼽이 돼요."],
+        ["✊","쥐기 반사","손바닥에 손가락을 대면 꽉 쥐어요. 배우지 않아도 태어날 때부터 하는 행동을 '반사'라고 해요."],
+        ["😲","모로 반사","깜짝 놀라면 두 팔을 쫙 벌렸다가 껴안듯이 오므려요."],
+        ["👀","흐릿한 눈","신생아는 20~30cm 거리만 흐릿하게 보여요. 딱 안겼을 때 엄마 얼굴이 있는 거리예요!"],
+        ["💤","잠꾸러기","하루에 16시간쯤 자요. 자는 동안 뇌와 몸이 쑥쑥 자라요."]],
+ q:"아기 머리에는 왜 말랑한 숨구멍이 있을까?",a:"머리뼈가 여러 조각으로 나뉘어 있어서, 태어날 때 좁은 길을 지날 수 있고 뇌가 자랄 자리도 생겨요.",
+ o:["태어날 때 좁은 길을 지나고, 뇌가 자랄 자리가 필요해서","아기는 머리로 숨을 쉬어서","머리카락이 나오는 구멍이라서"]},
+{id:"feed",f:2,name:"수유실",en:"Nursing Room",e:"🍼",it:"🥛 아기의 밥",
+ say:"아기에게 젖이나 분유를 먹이는 방이에요. 아기에게 밥을 먹이는 것을 '수유'라고 해요.",tools:["🛋️ 수유 쿠션","🍼 젖병","🧣 가제 수건"],
+ items:[["🤱","모유","엄마 몸이 만드는 아기 맞춤 밥이에요. 처음 며칠 나오는 노란 '초유'에는 균을 막아 주는 성분이 가득해요."],
+        ["🥄","분유","모유와 비슷하게 만든 가루 우유예요. 정해진 양의 물에 정확히 타서 먹여요."],
+        ["🍒","체리만 한 위","태어난 날 아기의 위는 체리만 해요. 일주일쯤 지나면 살구만 하고, 한 달이면 달걀만 해져요."],
+        ["💨","트림","먹으면서 공기도 같이 삼켜요. 그래서 다 먹으면 세워 안고 등을 토닥여 트림을 시켜요."]],
+ q:"신생아는 왜 2~3시간마다 자주 먹을까?",a:"위가 아주 작아서 한 번에 조금밖에 못 먹기 때문이에요. 그래서 하루에 8번도 넘게 먹어요.",
+ o:["위가 아주 작아서 한 번에 조금밖에 못 먹어서","먹는 게 재미있는 놀이라서","이가 없어서 천천히 먹어서"]},
+{id:"bath",f:2,name:"목욕실",en:"Bath Room",e:"🛁",it:"🫧 목욕은 이렇게",
+ say:"아기를 따뜻한 물로 씻기는 방이에요. 신생아 목욕은 빠르고 부드럽게 해요.",tools:["🛁 아기 욕조","🌡️ 물 온도계","🧺 폭신한 수건"],
+ items:[["🌡️","물 온도","체온보다 살짝 따뜻한 38도쯤이 좋아요. 어른이 팔꿈치를 담가서 확인하기도 해요."],
+        ["1️⃣","씻는 순서","깨끗한 곳부터! 얼굴, 머리, 몸, 엉덩이 순서로 씻어요."],
+        ["🪢","배꼽 말리기","탯줄이 떨어지기 전에는 목욕 뒤에 배꼽의 물기를 꼼꼼히 말려 줘요."],
+        ["🧴","태지","갓 태어난 아기 피부에는 하얀 크림 같은 '태지'가 묻어 있어요. 배 속 물에서 피부를 지켜 주던 보호막이에요."]],
+ q:"아기 목욕은 왜 5~10분 안에 빨리 끝낼까?",a:"신생아는 체온을 스스로 지키는 힘이 약해서 금방 추워지기 때문이에요.",
+ o:["체온을 스스로 지키는 힘이 약해서 금방 추워져서","아기가 물을 싫어해서","비누가 금방 녹아서"]},
+{id:"photo",f:2,name:"황달 치료실",en:"Phototherapy",e:"💡",it:"💛 신생아 황달",
+ say:"피부가 노랗게 된 아기가 파란 빛을 쬐는 방이에요. 신생아에게 흔한 일이고 대부분 금방 나아요.",tools:["💡 광선 치료기","🕶️ 아기 안대","📟 황달 측정기"],
+ items:[["💛","왜 노래질까?","아기의 간이 아직 연습 중이라, 노란 찌꺼기 '빌리루빈'을 다 치우지 못해서 피부와 눈이 노래져요."],
+        ["📟","황달 재기","작은 기계를 아기 이마나 가슴에 살짝 대면 노란 정도를 숫자로 알려 줘요."],
+        ["💡","파란 빛 치료","파란 빛이 피부 속 노란 찌꺼기를 몸 밖으로 잘 나가는 모양으로 바꿔 줘요. 오줌과 똥으로 나가요."],
+        ["🍼","잘 먹기","잘 먹고 똥을 잘 눌수록 노란 찌꺼기가 빨리 빠져나가요."]],
+ q:"빛 치료를 받는 아기는 왜 옷을 벗고 기저귀만 차고 있을까?",a:"빛이 피부에 많이 닿을수록 노란 찌꺼기가 잘 없어지기 때문이에요. 눈은 안대로 지켜 줘요.",
+ o:["빛이 피부에 많이 닿아야 치료가 잘 돼서","방이 너무 더워서","옷이 빛에 녹아서"]},
+{id:"lobby",f:1,name:"로비·면회실",en:"Lobby",e:"🚪",it:"📋 조리원의 약속",
+ say:"산후조리원은 아기를 낳은 엄마가 몸을 회복하고, 갓 태어난 아기가 돌봄을 받는 곳이에요. 보통 2주쯤 지내요.",tools:["🧴 손 소독제","😷 마스크","🪟 면회 유리창"],
+ items:[["🧼","손 씻기","들어올 때마다 비누로 30초 동안 손을 씻어요."],
+        ["🪟","유리창 면회","손님은 유리창 너머로 아기를 만나요. 직접 안아 볼 수 있는 건 조금 더 큰 다음이에요."],
+        ["🤧","아프면 다음에","기침이나 열이 있는 사람은 아기를 보러 오지 않아요."]],
+ q:"손님은 왜 유리창 너머로만 아기를 볼까?",a:"신생아는 균과 싸우는 힘(면역)이 아직 약해서, 어른에게는 가벼운 감기도 아기에게는 큰 병이 될 수 있어요.",
+ o:["아기는 균과 싸우는 힘이 아직 약해서","아기가 부끄러움을 많이 타서","유리창으로 보면 아기가 더 크게 보여서"]},
+{id:"doc",f:1,name:"회진실",en:"Newborn Checkup",e:"🩺",it:"📝 이런 걸 확인해요",
+ say:"소아청소년과 의사 선생님이 찾아와서 아기들이 건강하게 자라는지 진찰하는 방이에요.",tools:["🩺 청진기","⚖️ 아기 체중계","📏 머리둘레 줄자"],
+ items:[["💯","아프가 점수","태어나고 1분, 5분에 매기는 첫 성적표예요. 심장 박동, 숨쉬기, 근육의 힘, 반응, 피부색을 보고 10점 만점으로 점수를 줘요."],
+        ["⚖️","몸무게","신생아는 보통 3kg쯤이에요. 태어나고 며칠은 살짝 줄었다가 다시 쑥쑥 늘어요."],
+        ["🩸","발뒤꿈치 피검사","발뒤꿈치에서 피 몇 방울을 받아, 드물지만 일찍 찾아야 하는 병이 있는지 검사해요."],
+        ["👂","청력 검사","아기가 자는 동안 귀에 작은 소리를 들려주고 귀가 잘 반응하는지 확인해요."]],
+ q:"태어난 지 며칠 된 아기의 몸무게가 조금 줄었어요. 괜찮을까?",a:"괜찮아요! 몸속에 있던 물이 빠져나가서 그래요. 잘 먹으면 1~2주 안에 태어날 때 몸무게로 돌아와요.",
+ o:["괜찮아요. 몸속 물이 빠져서 그렇고 곧 다시 늘어요","큰일이에요. 바로 수술해야 해요","아기는 원래 계속 줄어들어요"],
+ link:["🏥 의사 선생님이 일하는 아림병원 구경 가기 →","https://claude.ai/artifact/WqxfPwzg4wWc8MwcunJyRJ"]},
+{id:"clean",f:1,name:"소독·세탁실",en:"Sterilization Room",e:"🫧",it:"✨ 깨끗하게 지켜요",
+ say:"젖병을 소독하고 아기 옷과 속싸개를 빨아요. 아기를 균으로부터 지키는 숨은 일꾼들의 방이에요.",tools:["♨️ 젖병 소독기","🧺 세탁기","🌡️ 온도·습도계"],
+ items:[["♨️","젖병 소독","젖병을 씻은 뒤 뜨거운 김(증기)으로 한 번 더 소독해요."],
+        ["👕","아기 빨래","아기 옷은 순한 세제로 어른 옷과 따로 빨아요."],
+        ["🌡️","방 온도","신생아실은 24도쯤으로 따뜻하게, 너무 건조하지 않게 맞춰요."]],
+ q:"젖병은 왜 물로만 씻지 않고 뜨거운 김으로 소독할까?",a:"우유 찌꺼기에는 균이 잘 자라요. 뜨거운 열이 눈에 안 보이는 균까지 없애 줘요.",
+ o:["뜨거운 열이 남아 있는 균을 없애 줘서","젖병이 더 반짝거려서","우유가 더 달콤해져서"]}
+];
+const DM=Object.fromEntries(D.map(d=>[d.id,d]));
+const CARE={
+ hungry:{l:"🍼 배가 고파요",do:"우유를 먹여 줬어요",ex:"볼에 무언가 닿으면 그쪽으로 고개를 돌리며 입을 벌리는 것을 '먹이 찾기 반사'라고 해요. 배고프다는 신호예요.",
+  c:[["먹은 지 3시간이 지났어요","입을 벌리고 고개를 이리저리 돌려요","자기 손을 쪽쪽 빨아요"],["입을 오물오물해요","볼에 손을 대면 그쪽으로 고개를 돌려요","마지막 수유는 한참 전이에요"]]},
+ diaper:{l:"🧷 기저귀가 젖었어요",do:"기저귀를 갈아 줬어요",ex:"신생아는 하루에 8~10번이나 기저귀를 갈아요. 젖은 채로 오래 두면 엉덩이가 빨개져요.",
+  c:[["기저귀의 노란 줄이 파랗게 변했어요","엉덩이를 들썩들썩해요","조금 전에 배부르게 먹었어요"],["구수한 냄새가 솔솔 나요","아까 얼굴이 빨개지며 끙 하고 힘을 줬어요","다리를 버둥거려요"]]},
+ sleepy:{l:"😴 졸려요",do:"속싸개로 감싸 안고 토닥여 줬어요",ex:"신생아는 하루 16시간쯤 자요. 너무 졸리면 스스로 잠들지 못해서 오히려 울어요.",
+  c:[["하품을 크게 했어요","눈을 비비고 눈꺼풀이 무거워요","먹고 트림도 하고 기저귀도 뽀송해요"],["멍하니 한 곳만 봐요","칭얼칭얼 작은 소리로 울어요","깨어 있은 지 1시간이 넘었고 자꾸 하품해요"]]},
+ burp:{l:"💨 트림이 필요해요",do:"세워 안고 등을 토닥여 줬어요. 꺼억!",ex:"아기는 먹으면서 공기도 같이 삼켜요. 공기가 위에 남아 있으면 배가 불편해요.",
+  c:[["방금 우유를 다 먹었어요","몸을 비틀며 끙끙거려요","배가 빵빵해요"],["먹다가 갑자기 젖병을 밀어내요","얼굴을 찡그리며 몸을 뒤로 젖혀요","우유를 조금 게워 냈어요"]]},
+ hot:{l:"🥵 더워요",do:"이불을 걷고 옷을 한 겹 벗겨 줬어요",ex:"아기는 땀으로 체온을 식히는 일이 아직 서툴러요. 목 뒤를 만져 보면 더운지 알 수 있어요.",
+  c:[["얼굴이 빨개요","목 뒤가 땀으로 촉촉해요","속싸개에 이불까지 두 겹 덮고 있어요"]]},
+ cold:{l:"🥶 추워요",do:"모자를 씌우고 포근하게 감싸 줬어요",ex:"아기는 머리가 몸에 비해 커서 머리로 열이 많이 빠져나가요. 그래서 모자가 도움이 돼요.",
+  c:[["손과 발이 차가워요","몸을 잔뜩 웅크리고 있어요","목욕을 하고 막 나왔어요"]]},
+ hug:{l:"🤗 안아 주세요",do:"가슴에 포근히 안아 줬어요",ex:"아기는 배 속에서 열 달 동안 엄마 심장 소리를 들었어요. 안겨서 심장 소리를 들으면 마음이 편안해져요.",
+  c:[["기저귀는 뽀송해요","방금 먹고 트림도 했어요","혼자 오래 누워 있었고 졸려 보이지는 않아요"]]}
+};
+const NAMES=["콩이","별이","튼튼이","복덩이","사랑이","꿈이","햇살이","열무"];
+const PRAISES=["와, 생각하는 힘이 대단해요! 🌟","아림이 진짜 간호사 선생님 같아! 👩‍⚕️","스스로 생각해 본 게 제일 멋져요! 👏","단서를 잘 찾았네! 💖","오늘도 한 뼘 더 똑똑해졌어요! 🧠✨"];
+const RANKS=[[0,"🐣 견학생"],[4,"🍼 꼬마 도우미"],[8,"👩‍⚕️ 꼬마 간호사"],[11,"🏅 수간호사"]];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const $=id=>document.getElementById(id);
+let st={s:{},cared:0};
+try{const x=JSON.parse(localStorage.getItem("arim-joriwon1")||"null");if(x)st=Object.assign(st,x);}catch(e){}
+const save=()=>{try{localStorage.setItem("arim-joriwon1",JSON.stringify(st));}catch(e){}};
+
+$("bld").innerHTML=[3,2,1].map(f=>{
+  const [nm,c,bg]=FL[f];
+  const rooms=D.filter(d=>d.f===f).map(d=>`<button class="room" data-id="${d.id}" style="background:${bg}"><span class="st">💮</span><div class="e">${d.e}</div><div class="n">${d.name}</div></button>`).join("")
+    +(f===1?`<button class="room desk" data-desk="1"><div class="e">😭</div><div class="n">우는 아기 돌보기</div></button>`:"");
+  return `<div class="floor"><div class="fl" style="background:${c}">${f}F<small>${nm}</small></div><div class="rooms">${rooms}</div></div>`;
+}).join("");
+$("bld").addEventListener("click",e=>{const b=e.target.closest(".room");if(!b)return;if(b.dataset.desk)go("desk");else openRoom(b.dataset.id);});
+
+function refresh(){
+  const n=D.filter(d=>st.s[d.id]).length;
+  D.forEach(d=>document.querySelector(`.room[data-id="${d.id}"]`).classList.toggle("done",!!st.s[d.id]));
+  let r=RANKS[0][1],next=null;
+  for(const [k,v] of RANKS){if(n>=k)r=v;else if(next===null)next=k;}
+  $("pRank").textContent=r;
+  $("pSt").textContent="💮 견학 도장 "+n+"/"+D.length+(next?" (다음 승진 "+next+"개)":"");
+  $("pGd").textContent="👶 돌본 아기 "+st.cared+"명";
+  $("finish").classList.toggle("show",n===D.length);
+}
+$("reset").onclick=()=>{st={s:{},cared:0};save();refresh();window.scrollTo({top:0,behavior:"smooth"});};
+function go(v){
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x.dataset.v===v));
+  $("vTour").classList.toggle("on",v==="tour");$("vDesk").classList.toggle("on",v==="desk");
+  if(v==="desk"&&!qz)newBaby();
+  window.scrollTo({top:0});
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>go(b.dataset.v));
+
+const sheet=$("sheet"),card=$("card");
+const closeSheet=()=>sheet.classList.remove("open");
+sheet.addEventListener("click",e=>{if(e.target===sheet)closeSheet();});
+function openRoom(id){
+  const d=DM[id],done=!!st.s[id];
+  card.innerHTML=`<div class="top"><div class="e">${d.e}</div><div><h2>${d.name}</h2><div class="en">${d.en}</div><span class="where">${d.f}층 · ${FL[d.f][0]}</span></div><button class="x" data-act="close" aria-label="닫기">✕</button></div>
+   <div class="box b-work"><h3>🏠 어떤 방일까?</h3><p>${d.say}</p><div class="tools">${d.tools.map(t=>`<span class="tool">${t}</span>`).join("")}</div></div>
+   <div class="dzh">${d.it}</div>
+   ${d.items.map(z=>`<div class="item"><b>${z[0]} ${z[1]}</b>${z[2]}</div>`).join("")}
+   <div class="box b-q"><h3>🤔 퀴즈!</h3><p>${d.q}</p>
+   <div class="opts" style="margin-top:10px">${(done?[0]:shuffle([0,1,2])).map(k=>`<button class="opt${done?" right":""}" data-act="pick" data-id="${id}" data-k="${k}">${d.o[k]}</button>`).join("")}</div>
+   <div class="msg" id="qmsg"></div>
+   <div class="ans${done?" show":""}" id="ans"><div class="pr">${done?"견학 도장을 받았어요 💮":""}</div><p>${d.a}</p></div></div>
+   ${d.link?`<a class="go h" href="${d.link[1]}" target="_blank" rel="noopener">${d.link[0]}</a>`:""}`;
+  sheet.classList.add("open");card.scrollTop=0;
+}
+card.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b)return;
+  if(b.dataset.act==="close")closeSheet();
+  else if(b.dataset.act==="pick"){
+    if(st.s[b.dataset.id]||b.classList.contains("wrong"))return;
+    if(b.dataset.k==="0"){
+      b.classList.add("right");card.querySelectorAll('[data-act="pick"]').forEach(x=>{if(x!==b)x.remove();});
+      $("qmsg").textContent="";const a=$("ans");a.querySelector(".pr").textContent=pick(PRAISES)+" 견학 도장 💮";a.classList.add("show");
+      st.s[b.dataset.id]=1;save();refresh();
+      window.TOWN&&TOWN.solved("j:"+b.dataset.id+":0",card.querySelectorAll(".opt.wrong").length);
+    }else{b.classList.add("wrong");$("qmsg").textContent="음, 다시 생각해 볼까? 💭";}
+  }
+});
+
+let qz=null,last=null;
+const KEYS=Object.keys(CARE);
+function newBaby(){
+  let k;do{k=pick(KEYS);}while(k===last);last=k;
+  const bad={sleepy:["hug"],hug:["sleepy"],burp:["diaper"],diaper:["burp"]}[k]||[];
+  qz={k,name:pick(NAMES),clues:pick(CARE[k].c),done:false,opts:shuffle([k,...shuffle(KEYS.filter(x=>x!==k&&!bad.includes(x))).slice(0,2)])};
+  renderQuiz();
+}
+function renderQuiz(){
+  const c=CARE[qz.k];
+  let h=`<div class="baby">${qz.done?"😊":"😭"}</div><div class="bname">${qz.done?qz.name+"가 방긋 웃어요!":"신생아실의 "+qz.name+"가 울어요. 으앙!"}</div>`;
+  if(!qz.done){
+    h+=`<div class="qtitle">🔎 단서를 살펴봐</div><div class="clues">${qz.clues.map(x=>`<div class="clue">• ${x}</div>`).join("")}</div>
+        <div class="qtitle">${qz.name}는 왜 울까?</div><div class="opts">${qz.opts.map(o=>`<button class="opt" data-o="${o}">${CARE[o].l}</button>`).join("")}</div><div class="msg" id="msg"></div>`;
+  }else{
+    h+=`<div class="result"><b>${pick(PRAISES)}</b><br><b>${c.l}</b><br>아림 간호사 선생님이 ${c.do}.<br>${c.ex}</div><button class="btn soft" id="nextPt">다음 아기 돌보러 가기 👣</button>`;
+  }
+  $("quiz").innerHTML=h;
+  $("stamps").textContent=st.cared?"돌본 아기 "+st.cared+"명 "+"💮".repeat(Math.min(st.cared,10)):"아기는 말을 못 해서 울음으로 이야기해요. 단서를 보고 이유를 찾아 줘!";
+}
+$("quiz").addEventListener("click",e=>{
+  if(e.target.closest("#nextPt")){newBaby();return;}
+  const b=e.target.closest(".opt");if(!b||b.classList.contains("wrong"))return;
+  if(b.dataset.o===qz.k){qz.done=true;st.cared++;save();refresh();renderQuiz();}
+  else{b.classList.add("wrong");$("msg").textContent="음, 단서를 다시 읽어 볼까? 💭";}
+});
+window.TOWN&&TOWN.reg("j",qid=>{const d=DM[qid.split(":")[1]];return d?{q:[d.q,d.o[0],d.o[1],d.o[2],d.a],label:d.e+" "+d.name}:null;});
+refresh();
+</script>
+</body>
+</html>

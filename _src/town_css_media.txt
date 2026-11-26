@@ -1,0 +1,33 @@
+  /* ===== 태블릿 · 가로 화면 ===== */
+  @media (min-width:700px){
+    main,nav{max-width:760px}
+    #home{max-width:760px}
+    .rooms{grid-template-columns:repeat(6,1fr)}
+    #pj .rooms{grid-template-columns:repeat(4,1fr)}
+    .room{min-height:92px}
+    .room .n{font-size:16px}
+    .sheet{align-items:center;padding:16px}
+    .sheet .card{max-width:680px;border-radius:26px;max-height:88vh}
+    .shopgrid{grid-template-columns:repeat(5,1fr)}
+    .tgrid{grid-template-columns:repeat(4,1fr)}
+    .ovc{max-width:560px}
+    #map{margin:14px 0 0}
+  }
+  @media (min-width:900px) and (orientation:landscape){
+    #home{max-width:1320px;padding:8px 18px 30px}
+    #home > .hdeco{display:none}
+    #home h1{margin:2px 0 0;font-size:28px}
+    #map{margin:8px 0 0}
+    .hcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 16px;align-items:start}
+    main,nav{max-width:900px}
+    .qz{font-size:18px}
+    .sheet .card.wide{max-width:1120px}
+    #ph main,#ph nav{max-width:1180px}
+    #ph .room{min-height:98px}
+    #ph .room .n{font-size:17px}
+    #ph .fl{font-size:26px}
+    #ph .floor{grid-template-columns:72px 1fr}
+    .card.wide .scwrap{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+    .card.wide .scwrap .box:first-child{margin-top:0}
+  }
+  @media (max-width:820px){#map{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}#map::-webkit-scrollbar{display:none}#mapsvg{width:820px;max-width:none}#home .sub::after{content:" 지도를 옆으로 밀면 더 보여요 👉";color:#d6457e}}

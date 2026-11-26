@@ -1,6 +1,6 @@
 // 아림 마을 오프라인 캐시. 내용을 고쳐서 다시 올릴 때는 아래 버전 숫자를 올려 주세요.
-const CACHE = "arim-town-v35";
-const CORE = ["./", "index.html", "manifest.webmanifest", "packs.json", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "map/base.webp", "map/top.webp", "map/b_h.webp", "map/b_p.webp", "map/b_e.webp", "map/b_v.webp", "map/b_k.webp", "map/b_c.webp", "map/b_home.webp"];
+const CACHE = "arim-town-v38";
+const CORE = ["./", "index.html", "manifest.webmanifest", "packs.json", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png", "map/b_c.webp", "map/b_e.webp", "map/b_f.webp", "map/b_h.webp", "map/b_home.webp", "map/b_k.webp", "map/b_l.webp", "map/b_p.webp", "map/b_s.webp", "map/b_u.webp", "map/b_v.webp", "map/base.webp", "map/in_corr.webp", "map/in_room.webp", "map/in_shop.webp", "map/in_study.webp", "map/top.webp"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
 });
