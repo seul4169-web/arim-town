@@ -7,7 +7,8 @@
 2. `python3 /tmp/asm.py && python3 /tmp/merge.py` → `/home/claude/town.html`이 만들어집니다.
 3. `town.html`로 저장소의 `index.html`을 만듭니다.
    - `<meta name="viewport" ...>` 한 줄을, 지금 `index.html`의 viewport부터 `<title>` 앞까지의 머리 부분으로 바꿉니다.
-   - 끝의 `fromHash();\nTOWN.start();\n</script>` 부터 뒤쪽을, 지금 `index.html`의 같은 자리부터 끝까지(서비스 워커 등록 포함)로 바꿉니다.
+   - 끝의 `fromHash();\nTOWN.start();\n</script>` 부터 뒤쪽을, 지금 `index.html`의 `fromHash();\nTOWN.start();\n` 부터 끝까지(서비스 워커 등록 포함)로 바꿉니다. (`index.html`에는 `TOWN.start();` 바로 뒤에 서비스 워커 등록 줄이 있어서 `</script>`가 바로 붙어 있지 않습니다.)
+   - 합친 뒤 `git diff index.html`에 고친 줄만 바뀌어 나오는지 확인합니다.
 4. `sw.js`의 `arim-town-v숫자`를 1 올립니다. 그림 파일을 더했으면 `CORE` 목록에도 넣습니다.
 5. `main`과 `gh-pages` 두 가지에 같은 내용을 올립니다.
 

@@ -2567,7 +2567,7 @@ const doorBtn=d=>`<button class="room door" data-id="${d.id}" style="--dc:${FL[d
 const liftBtn=f=>`<button class="lift" data-lift="1" aria-label="엘리베이터"><span class="ind">${fname(f)}</span><i></i><i></i><b class="call">▲<br>▼</b></button>`;
 function corridor(f){
   const ds=D.filter(d=>d.f===f).map(doorBtn);
-  if(f===1)[["desk","안내","🛎️","#e9a23b"],["dx","추리","🔍","#5aa9e6"],["eng","영어","🔤","#f08aa6"],["mind","마음","💗","#b48ae0"]].forEach(s=>ds.push(`<button class="room door sp lock" data-sp="${s[0]}" style="--dc:${s[3]};--db:#fff"><span class="plate">${s[1]}</span><span class="win">${s[2]}</span><span class="lk">🔒</span><i class="knob"></i></button>`));
+  if(f===1)[["desk","안내 데스크","🛎️","#e9a23b"],["dx","진단 회의실","🔍","#5aa9e6"],["eng","국제진료센터","🌏","#f08aa6"],["mind","마음 상담실","💗","#b48ae0"]].forEach(s=>ds.push(`<button class="room door sp lock" data-sp="${s[0]}" style="--dc:${s[3]};--db:#fff"><span class="plate">${s[1]}</span><span class="win">${s[2]}</span><span class="lk">🔒</span><i class="knob"></i></button>`));
   if(f===0)ds.push(`<button class="room door" data-jori="1" style="--dc:#f0b45c;--db:#fff0d6"><span class="plate">산후조리원</span><span class="win">🍼</span><div class="pg" id="joriPg"></div><i class="knob"></i></button>`);
   const L=Math.ceil(ds.length/2);
   return `<div class="corr" data-f="${f}" style="--fc:${FL[f][1]};--fb:${FL[f][2]}"><div class="cin"><span class="deco">${f===1?"🚪":"🪴"}</span>${ds.slice(0,L).join("")}${liftBtn(f)}${ds.slice(L).join("")}<span class="deco">🪴</span></div></div>`;
