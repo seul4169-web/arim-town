@@ -6,6 +6,12 @@
   const gate=k=>k==="home"||k==="k"||studied();
   const pick=a=>a[Math.floor(Math.random()*a.length)];
   const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+  const NO=5;/* 보기 개수 */
+  const five=(ans,c)=>{const r=[ans];for(const v of shuffle(c)){if(v>=0&&!r.includes(v))r.push(v);if(r.length===NO)break;}let k=1;while(r.length<NO){if(!r.includes(ans+k))r.push(ans+k);if(r.length<NO&&ans-k>=0&&!r.includes(ans-k))r.push(ans-k);k++;}return shuffle(r);};
+  const padW=(c,ws,pool)=>{const r=ws.filter(w=>w!==c);for(const v of shuffle(pool)){if(r.length>=NO-1)break;if(v!==c&&!r.includes(v))r.push(v);}return r.slice(0,NO-1);};
+  /* 겹받침 낱말의 헷갈리는 잘못 쓴 말 만들기 */
+  const JALT={3:[1,19,9,18],5:[4,22,6,7],6:[4,27,5,15],9:[1,8,10,11,2],10:[16,8,9,11],11:[17,8,9,10],13:[8,25,7,15,11],15:[8,27,6,13],18:[17,19,3,16,20]};
+  const kAlt=w=>{const out=[];[...w].forEach((ch,i)=>{const c=ch.charCodeAt(0)-0xAC00;if(c<0||c>11171)return;const j=c%28;(JALT[j]||[]).forEach(n=>out.push(w.slice(0,i)+String.fromCharCode(0xAC00+c-j+n)+w.slice(i+1)));});return out;};
   const mkQ=(h,c,ws,why,x)=>{const o=shuffle([c].concat(ws));return Object.assign({h:h,o:o,a:o.indexOf(c),why:why},x||{});};
   window.PTS.k=(M.sdn||0)*3;
   (window.PLN=window.PLN||{}).k="study";(window.PBG=window.PBG||{}).k="#e3f1ff";
@@ -18,9 +24,9 @@
   const kNew=(L,t)=>{let c=L.filter(x=>!kUsed[t+x[0]]);if(!c.length){L.forEach(x=>{delete kUsed[t+x[0]];});c=L;}const x=pick(c);kUsed[t+x[0]]=1;return x;};
   function kGen(i){
     const t=["r","f","p","r","f"][i%5];
-    if(t==="r"){const x=kNew(KREAD,t);return mkQ(`<div class="skbig sm">${x[0]}</div><div class="skq">읽고, 맞는 그림을 골라요</div>`,x[1],x[2],`<b>${x[0]}</b> ${x[1]}`,{em:1});}
-    if(t==="f"){const x=kNew(KFILL,t);return mkQ(`<div class="skem">${x[3]}</div><div class="skbig sm">${x[0]}</div><div class="skq">○에 들어갈, 바르게 쓴 말은?</div>`,x[1],x[2],`<b>${x[0].replace(/○+/,x[1])}</b>`);}
-    const x=kNew(KPIC,"p");return mkQ(`<div class="skem">${x[0]}</div><div class="skq">${x[1]}</div>`,x[2],x[3],`바르게 쓰면 <b>${x[2]}</b>`);
+    if(t==="r"){const x=kNew(KREAD,t);return mkQ(`<div class="skbig sm">${x[0]}</div><div class="skq">읽고, 맞는 그림을 골라요</div>`,x[1],padW(x[1],x[2],KREAD.flatMap(y=>[y[1]].concat(y[2]))),`<b>${x[0]}</b> ${x[1]}`,{em:1});}
+    if(t==="f"){const x=kNew(KFILL,t);return mkQ(`<div class="skem">${x[3]}</div><div class="skbig sm">${x[0]}</div><div class="skq">○에 들어갈, 바르게 쓴 말은?</div>`,x[1],padW(x[1],x[2],kAlt(x[1])),`<b>${x[0].replace(/○+/,x[1])}</b>`);}
+    const x=kNew(KPIC,"p");return mkQ(`<div class="skem">${x[0]}</div><div class="skq">${x[1]}</div>`,x[2],padW(x[2],x[3],kAlt(x[2])),`바르게 쓰면 <b>${x[2]}</b>`);
   }
 
   /* --- 연산: 덧셈 · 뺄셈 · 시계 · 규칙 --- */
@@ -28,7 +34,7 @@
     for(let i=1;i<=12;i++){const a=i*Math.PI/6;s+=`<text x="${(60+42*Math.sin(a)).toFixed(1)}" y="${(65-42*Math.cos(a)).toFixed(1)}" font-size="14" text-anchor="middle" font-family="Jua,sans-serif" fill="#33302e">${i}</text>`;}
     const ha=(h%12+m/60)*Math.PI/6,ma=m*Math.PI/30;
     return s+`<line x1="60" y1="60" x2="${(60+24*Math.sin(ha)).toFixed(1)}" y2="${(60-24*Math.cos(ha)).toFixed(1)}" stroke="#33302e" stroke-width="6" stroke-linecap="round"/><line x1="60" y1="60" x2="${(60+37*Math.sin(ma)).toFixed(1)}" y2="${(60-37*Math.cos(ma)).toFixed(1)}" stroke="#e8504f" stroke-width="4" stroke-linecap="round"/><circle cx="60" cy="60" r="4" fill="#33302e"/></svg>`;};
-  const eqQ=(t,ans,why)=>mkQ(`<div class="skbig">${t}</div>`,String(ans),three(ans,[ans+1,ans-1,ans+2,ans-2,ans+10,ans-10]).filter(v=>v!==ans).map(String),why);
+  const eqQ=(t,ans,why)=>mkQ(`<div class="skbig">${t}</div>`,String(ans),five(ans,[ans+1,ans-1,ans+2,ans-2,ans+10,ans-10]).filter(v=>v!==ans).map(String),why);
   const MG={
     add:()=>{const a=rnd(5,9),b=rnd(11-a,9),t=10-a;return eqQ(`${a} + ${b} = ?`,a+b,`${a} + ${t} = 10<br>10 + ${b-t} = <b>${a+b}</b>`);},
     sub:()=>{const a=rnd(11,17),b=rnd(a-9,9),t=a-10;return eqQ(`${a} − ${b} = ?`,a-b,`${a} − ${t} = 10<br>10 − ${b-t} = <b>${a-b}</b>`);},
@@ -41,12 +47,12 @@
     three:()=>{if(Math.random()<.5){const a=rnd(2,7),b=rnd(2,6),c=rnd(2,6);return eqQ(`${a} + ${b} + ${c} = ?`,a+b+c,`${a} + ${b} = ${a+b}<br>${a+b} + ${c} = <b>${a+b+c}</b>`);}
       const a=rnd(12,18),b=rnd(2,5),c=rnd(2,5);return eqQ(`${a} − ${b} − ${c} = ?`,a-b-c,`${a} − ${b} = ${a-b}<br>${a-b} − ${c} = <b>${a-b-c}</b>`);},
     story:()=>{const x=pick([["🍎","사과","먹고","샀어요"],["🎈","풍선","터지고","불었어요"],["⭐","별 스티커","붙이고","받았어요"]]),a=rnd(8,14),b=rnd(2,6),c=rnd(3,7),r=a-b+c;
-      return mkQ(`<div class="skem">${x[0]}</div><div class="skq big">${x[1]} ${a}개에서 ${b}개를 ${x[2]},<br>${c}개를 더 ${x[3]}. 모두 몇 개?</div>`,String(r),three(r,[r+1,r-1,r+2,r-2,a+b+c]).filter(v=>v!==r).map(String),`${a} − ${b} = ${a-b}<br>${a-b} + ${c} = <b>${r}</b>`);},
+      return mkQ(`<div class="skem">${x[0]}</div><div class="skq big">${x[1]} ${a}개에서 ${b}개를 ${x[2]},<br>${c}개를 더 ${x[3]}. 모두 몇 개?</div>`,String(r),five(r,[r+1,r-1,r+2,r-2,a+b+c,a-b-c]).filter(v=>v!==r).map(String),`${a} − ${b} = ${a-b}<br>${a-b} + ${c} = <b>${r}</b>`);},
     clock:()=>{const h=rnd(1,12),half=Math.random()<.5,nm=(H,M2)=>H+"시"+(M2?" 30분":""),h2=h%12+1,h0=(h+10)%12+1;
-      const ws=half?[nm(h2,30),nm(h,0)]:[nm(h,30),pick([nm(h2,0),nm(h0,0)])];
+      const ws=half?[nm(h2,30),nm(h,0),nm(h2,0),nm(h0,30)]:[nm(h,30),nm(h2,0),nm(h0,0),nm(h0,30)];
       return mkQ(skClock(h,half?30:0)+`<div class="skq">몇 시일까?</div>`,nm(h,half?30:0),ws,half?`긴바늘이 6 → 30분<br>짧은바늘이 ${h}와 ${h2} 사이 → <b>${h}시 30분</b>`:`긴바늘이 12 → 정각<br>짧은바늘이 ${h} → <b>${h}시</b>`);},
-    pat:()=>{const d=pick([2,3,5,10,-2,-3,-5]),s=d>0?rnd(1,9):rnd(30,50),a=[0,1,2,3].map(i=>s+d*i),r=s+d*4;return mkQ(`<div class="skbig sm">${a.join(", ")}, □</div><div class="skq">□에 들어갈 수는?</div>`,String(r),three(r,[r+1,r-1,r+d,r-d,r+2]).filter(v=>v!==r).map(String),`${Math.abs(d)}씩 ${d>0?"커져요":"작아져요"} → <b>${r}</b>`);},
-    big:()=>{const big=Math.random()<.5;let a=[];while(a.length<3){const v=rnd(12,98);if(!a.includes(v))a.push(v);}const r=big?Math.max(...a):Math.min(...a),o=a.map(String);return {h:`<div class="skq big">가장 ${big?"큰":"작은"} 수는?</div>`,o:o,a:o.indexOf(String(r)),why:`십의 자리부터 비교해요 → <b>${r}</b>`};}
+    pat:()=>{const d=pick([2,3,5,10,-2,-3,-5]),s=d>0?rnd(1,9):rnd(30,50),a=[0,1,2,3].map(i=>s+d*i),r=s+d*4;return mkQ(`<div class="skbig sm">${a.join(", ")}, □</div><div class="skq">□에 들어갈 수는?</div>`,String(r),five(r,[r+1,r-1,r+d,r-d,r+2,r-2]).filter(v=>v!==r).map(String),`${Math.abs(d)}씩 ${d>0?"커져요":"작아져요"} → <b>${r}</b>`);},
+    big:()=>{const big=Math.random()<.5;let a=[];while(a.length<NO){const v=rnd(12,98);if(!a.includes(v))a.push(v);}const r=big?Math.max(...a):Math.min(...a),o=a.map(String);return {h:`<div class="skq big">가장 ${big?"큰":"작은"} 수는?</div>`,o:o,a:o.indexOf(String(r)),why:`십의 자리부터 비교해요 → <b>${r}</b>`};}
   };
   const mGen=i=>MG[[pick(["add","sub"]),pick(["two","tens"]),"clock",pick(["box","three","story"]),pick(["pat","big"])][i%5]]();
 
@@ -61,14 +67,14 @@
   const spk=w=>`<button class="skspk" data-say="${w}">🔊</button>`;
   function eGen(i){
     const t=["hear","first","read","word","rhyme"][i%5];
-    if(t==="rhyme"){const G=pick(ERH),a=pick(G),b=pick(G.filter(w=>w!==a)),ws=shuffle(EW.filter(y=>!G.includes(y[0])&&y[0].slice(1)!==a.slice(1))).slice(0,2);
+    if(t==="rhyme"){const G=pick(ERH),a=pick(G),b=pick(G.filter(w=>w!==a)),ws=shuffle(EW.filter(y=>!G.includes(y[0])&&y[0].slice(1)!==a.slice(1))).slice(0,NO-1);
       return mkQ(`<div class="skbig en">${a} ${ew(a)[1]}</div>${spk(a)}<div class="skq">끝소리가 같은 낱말은?</div>`,`<span class="en">${b}</span> ${ew(b)[1]}`,ws.map(y=>`<span class="en">${y[0]}</span> ${y[1]}`),`<span class="en">${a}</span> – <span class="en">${b}</span><br>둘 다 <b class="en">-${a.slice(1)}</b> 소리로 끝나요.`,{snd:a,after:a+", "+b});}
     const x=eNew(EW);
-    if(t==="hear")return mkQ(`${spk(x[0])}<div class="skq">잘 듣고, 맞는 그림을 골라요</div>`,x[1],eOther(x,2).map(y=>y[1]),`<span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{snd:x[0],em:1,after:x[0]});
-    if(t==="first"){const c=x[0][0],bad=c==="c"?"k":c==="k"?"c":"",ls=shuffle("bdpmnhtsrlfgwjv".split("").filter(l=>l!==c&&l!==bad)).slice(0,2);
+    if(t==="hear")return mkQ(`${spk(x[0])}<div class="skq">잘 듣고, 맞는 그림을 골라요</div>`,x[1],eOther(x,NO-1).map(y=>y[1]),`<span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{snd:x[0],em:1,after:x[0]});
+    if(t==="first"){const c=x[0][0],bad=c==="c"?"k":c==="k"?"c":"",ls=shuffle("bdpmnhtsrlfgwjv".split("").filter(l=>l!==c&&l!==bad)).slice(0,NO-1);
       return mkQ(`<div class="skem">${x[1]}</div>${spk(x[0])}<div class="skq">첫소리 글자는?</div>`,c,ls,`<b class="en">${c}</b> → <span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{snd:x[0],em:1,en:1,after:x[0]});}
-    if(t==="read")return mkQ(`<div class="skbig en">${x[0]}</div><div class="skq">읽고, 맞는 그림을 골라요</div>`,x[1],eOther(x,2).map(y=>y[1]),`<span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{em:1,after:x[0]});
-    let ws=eOther(x,2,y=>y[0][0]===x[0][0]||y[0].slice(1)===x[0].slice(1));if(ws.length<2)ws=ws.concat(eOther(x,4,y=>!ws.includes(y))).slice(0,2);
+    if(t==="read")return mkQ(`<div class="skbig en">${x[0]}</div><div class="skq">읽고, 맞는 그림을 골라요</div>`,x[1],eOther(x,NO-1).map(y=>y[1]),`<span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{em:1,after:x[0]});
+    let ws=eOther(x,NO-1,y=>y[0][0]===x[0][0]||y[0].slice(1)===x[0].slice(1));if(ws.length<NO-1)ws=ws.concat(eOther(x,8,y=>!ws.includes(y))).slice(0,NO-1);
     return mkQ(`<div class="skem">${x[1]}</div><div class="skq">${x[2]} — 맞는 낱말은?</div>`,x[0],ws.map(y=>y[0]),`<span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{en:1,after:x[0]});
   }
   const SGEN={k:kGen,m:mGen,e:eGen};
@@ -97,14 +103,18 @@
     g("skBack").onclick=()=>{SFX("pop");drawStudy();};
     el.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>say(b.dataset.say));
     if(q.snd)setTimeout(()=>say(q.snd),350);
+    SK.miss=0;
     el.querySelectorAll(".skopt").forEach(b=>b.onclick=()=>{
-      if(SK.done)return;SK.done=true;const ok=Number(b.dataset.i)===q.a;
-      el.querySelectorAll(".skopt").forEach((x,i)=>{x.classList.add(i===q.a?"good":"dim");});if(!ok)b.classList.add("bad");
-      SFX(ok?"ok":"no");if(q.after)setTimeout(()=>say(q.after),500);
-      let fin=false;
-      if(ok&&!SK.free){const a=sdGet(),j=SKEY.indexOf(SK.s);a[j]=Math.min(SN,a[j]+1);sdSet(a);fin=a[j]>=SN;}
+      if(SK.done||b.classList.contains("bad"))return;const ok=Number(b.dataset.i)===q.a;
+      if(!ok){SK.miss++;b.classList.add("bad");b.disabled=true;SFX("no");
+        g("skAns").innerHTML=`<div class="skwhy no"><b>${SK.miss>=2?"아깝다! 한 번 더 생각해 봐 💭":"다시 찾아볼까? 🔍"}</b><p>${SK.miss>=2?"문제를 천천히 다시 읽어 봐요.":"남은 보기 중에서 맞는 것을 골라 봐요."}</p></div>`;return;}
+      SK.done=true;
+      el.querySelectorAll(".skopt").forEach((x,i)=>{if(i===q.a)x.classList.add("good");else if(!x.classList.contains("bad"))x.classList.add("dim");});
+      SFX("ok");if(q.after)setTimeout(()=>say(q.after),500);
+      const first=SK.miss===0;let fin=false;
+      if(first&&!SK.free){const a=sdGet(),j=SKEY.indexOf(SK.s);a[j]=Math.min(SN,a[j]+1);sdSet(a);fin=a[j]>=SN;}
       SK.n++;
-      g("skAns").innerHTML=`<div class="skwhy ${ok?"ok":"no"}"><b>${ok?"⭕ 맞았어요!":"다시 해 볼까? 새 문제가 나와요"}</b><p>${q.why}</p></div><button class="hbtn" id="skGo" style="background:${S[2]}">${fin?"다 했어요 ✅":"다음 ▶"}</button>`;
+      g("skAns").innerHTML=`<div class="skwhy ok"><b>${first?"⭕ 맞았어요!":"⭕ 찾았다! 끝까지 잘 찾았어요"}</b><p>${q.why}</p>${first||SK.free?"":`<small class="skmore">한 번에 맞히면 ● 하나가 채워져요</small>`}</div><button class="hbtn" id="skGo" style="background:${S[2]}">${fin?"다 했어요 ✅":"다음 ▶"}</button>`;
       g("skGo").onclick=()=>{if(fin||(SK.free&&SK.n>=SN)){skFinish();}else skNext();};
       g("skGo").scrollIntoView({block:"nearest",behavior:"smooth"});
     });
