@@ -3,7 +3,7 @@
   const sbGet=()=>{const v=M.sb||0;return Math.floor(v/10)===day()?v%10:0;};
   const sdGet=()=>{const v=M.sd||0;if(Math.floor(v/216)!==day())return [0,0,0,sbGet()];const r=v%216;return [Math.floor(r/36),Math.floor(r/6)%6,r%6,sbGet()];};
   const sdSet=a=>{M.sd=day()*216+Math.min(5,a[0])*36+Math.min(5,a[1])*6+Math.min(5,a[2]);M.sb=day()*10+Math.min(9,a[3]||0);save();};
-  const studied=()=>!!window.ARIM_PV||M.skip===day()||sdGet().every((n,i)=>n>=SNS[SKEY[i]]);
+  const studied=()=>!!window.ARIM_PV||M.skip===day()||sdGet().every((n,i)=>n>=SNS[SKEY[i]]||(SKEY[i]==="b"&&n===0&&!bToday()));
   const gate=k=>k==="home"||k==="k"||studied();
   const pick=a=>a[Math.floor(Math.random()*a.length)];
   const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
@@ -172,8 +172,20 @@
       ["탯줄이 붙어 있던 자리는 무엇이 될까?","배꼽",["점","보조개","딱지","콧구멍"],"탯줄이 떨어진 자리가 배꼽이 돼요.",6]]}
   ];
   /* 오늘의 책: 아직 안 읽은 책부터 하루 한 권 */
-  const bToday=()=>{const v=M.bt||0;if(Math.floor(v/100)===day()&&BOOKS[v%100])return BOOKS[v%100];
-    const rd=M.br||{};let i=BOOKS.findIndex(b=>!rd[b.id]);if(i<0)i=day()%BOOKS.length;M.bt=day()*100+i;save();return BOOKS[i];};
+  /* 매주 새 책: books.json ({"books":[{id,from:"YYYY-MM-DD",t,e,p,q}]}) — from 날짜가 되면 꺼내 읽어요 */
+  let XB=[];
+  const bOk=b=>b&&typeof b.id==="string"&&b.t&&b.e&&Array.isArray(b.p)&&b.p.length>=3&&b.p.every(x=>Array.isArray(x)&&x.length===2)&&Array.isArray(b.q)&&b.q.length===3&&b.q.every(x=>Array.isArray(x)&&x.length===5&&Array.isArray(x[2])&&x[2].length===4&&x[4]>=1&&x[4]<=b.p.length);
+  function loadBooks(){
+    return fetch("books.json",{cache:"no-cache"}).then(r=>r.ok?r.json():null).then(j=>{
+      if(!j||!Array.isArray(j.books))return;const t=dstr(),have=new Set(BOOKS.map(b=>b.id));
+      XB=j.books.filter(b=>bOk(b)&&(b.from||"")<=t&&!have.has(b.id)&&(have.add(b.id),true)).sort((a,b)=>(a.from||"")<(b.from||"")?-1:1);}).catch(()=>{});
+  }
+  const allBooks=()=>BOOKS.concat(XB);
+  /* 오늘의 책: 한 번 읽은 책은 다시 나오지 않아요. 읽을 새 책이 없으면 null */
+  const bToday=()=>{const L=allBooks();
+    if(M.btd===day()){const b=L.find(x=>x.id===M.bti);if(b)return b;}
+    const rd=M.br||{},b=L.find(x=>!rd[x.id]);if(!b)return null;
+    M.btd=day();M.bti=b.id;save();return b;};
 
   /* --- 화면 --- */
   const kp=document.createElement("div");kp.className="place";kp.id="pk";
@@ -184,11 +196,11 @@
   function drawStudy(){
     SK=null;const a=sdGet(),done=studied(),el=g("skMain");
     el.innerHTML=`<img class="banner" src="map/in_study.webp" alt=""><div class="skhead">${done?"💮 오늘 공부 끝! 마을 문이 열렸어요":"네 가지를 다 하면 마을 문이 열려요 🔓"}</div>
-      <div class="skgrid">${SKEY.map((k,i)=>`<button class="sksub${a[i]>=SNS[k]?" ok":""}" data-s="${k}" style="--c:${SUB[k][2]}"><span class="e">${SUB[k][0]}</span><b>${SUB[k][1]}</b>${dots(a[i],SUB[k][2],SNS[k])}<small>${a[i]>=SNS[k]?"✅ 다 했어요":a[i]+" / "+SNS[k]}</small></button>`).join("")}</div>
+      <div class="skgrid">${SKEY.map((k,i)=>`<button class="sksub${a[i]>=SNS[k]?" ok":""}" data-s="${k}" style="--c:${SUB[k][2]}"><span class="e">${SUB[k][0]}</span><b>${SUB[k][1]}</b>${dots(a[i],SUB[k][2],SNS[k])}<small>${a[i]>=SNS[k]?"✅ 다 했어요":k==="b"&&a[i]===0&&!bToday()?"📦 새 책 기다려요":a[i]+" / "+SNS[k]}</small></button>`).join("")}</div>
       <div class="skstamp${done?" on":""}"><span>${done?"💮":"🔒"}</span>${done?"출근 도장 쾅!":"출근 도장"}</div>
       ${done?`<button class="hbtn" id="skHome" style="background:#2fa38a">🏘️ 마을로 가기</button>`:""}`;
     el.querySelectorAll(".sksub").forEach(b=>b.onclick=()=>{SFX("pop");const k=b.dataset.s,c=sdGet()[SKEY.indexOf(k)];
-      if(k==="b"){SK={s:"b",bk:bToday(),pg:0,free:c>=SNS.b,qi:c>=SNS.b?0:c,cur:null,ret:false};drawBook();return;}
+      if(k==="b"){const bk=bToday();if(!bk){bWait();return;}SK={s:"b",bk:bk,pg:0,free:c>=SNS.b,qi:c>=SNS.b?0:c,cur:null,ret:false};drawBook();return;}
       SK={s:k,i:c%SNS[k],free:c>=SNS[k],n:0};skNext();});
     const h=g("skHome");if(h)h.onclick=()=>{SFX("pop");goPlace("home");};
   }
@@ -218,6 +230,11 @@
     });
   }
   /* 독서: 책 읽기 → 문제 3개 (틀리면 책에서 다시 찾기) */
+  function bWait(){
+    const el=g("skMain"),S=SUB.b;
+    el.innerHTML=`<div class="skbar"><button class="chipb" id="skBack">← 공부방</button><span style="color:${S[2]}">${S[0]} ${S[1]}</span></div><div class="skcard bk"><div class="bkcover"><div class="bkce">📦</div><div class="bkt">새 책이 오고 있어요</div><div class="skq">지금 있는 책은 모두 읽었어요! 대단해요 👏<br>새 책은 월요일에 도착해요. 오늘 독서는 쉬어도 돼요.</div></div></div>`;
+    g("skBack").onclick=()=>{SFX("pop");drawStudy();};
+  }
   function drawBook(){
     const el=g("skMain"),S=SUB.b,bk=SK.bk,P=bk.p.length,pg=SK.pg;
     const bar=`<div class="skbar"><button class="chipb" id="skBack">← 공부방</button><span style="color:${S[2]}">${S[0]} ${S[1]}</span>${SK.free?`<small>다시 읽기</small>`:dots(sdGet()[3],S[2],SNS.b)}</div>`;

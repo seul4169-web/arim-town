@@ -384,6 +384,6 @@
     addBld:b=>{BLD.push(b);(window.PLN=window.PLN||{})[b.key]=b.hash;(window.PBG=window.PBG||{})[b.key]=b.bg;},
     openTalk:openTalk,
     homeDraw:homeDraw,
-    start:()=>{watchSounds();homeDraw();loadPacks().then(()=>{homeDraw();if(studied()&&M.rvDay!==day()&&cands().length&&g("home").style.display!=="none"&&!g("rv").classList.contains("on"))openReview();});}
+    start:()=>{watchSounds();homeDraw();Promise.all([loadPacks(),loadBooks()]).then(()=>{homeDraw();if(studied()&&M.rvDay!==day()&&cands().length&&g("home").style.display!=="none"&&!g("rv").classList.contains("on"))openReview();});}
   };
 })();
