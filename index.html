@@ -482,6 +482,14 @@
   .skhead{text-align:center;font-family:'Jua',sans-serif;font-size:19px;color:#2c6e9b;margin:8px 0 14px}
   .skgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
   @media (max-width:560px){.skgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .dword{display:flex;justify-content:center;gap:8px;margin:10px 0}
+  .dslot{width:72px;height:72px;border:3px dashed #f3c6d4;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:46px;color:#4a3f55;background:#fffdfb}
+  .dslot.on{border-style:solid;border-color:#f08aa6}
+  .dtiles{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:8px auto;max-width:460px}
+  .dtile{width:62px;height:62px;border:none;border-radius:14px;background:#fff3f7;box-shadow:0 4px 0 #f3c6d4;font-family:'Jua',sans-serif;font-size:34px;color:#4a3f55}
+  .dtile.shake{animation:dshake .35s}
+  @keyframes dshake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+  .skspk.big{display:block;margin:4px auto;width:auto;height:auto;white-space:nowrap;font-size:20px;padding:10px 18px;border-radius:16px}
   .wbox{width:min(330px,74vw);aspect-ratio:1;margin:8px auto 4px;background:#fffdfb;border:3px solid #f3c6d4;border-radius:18px;touch-action:none}
   .wbox canvas{width:100%;height:100%;display:block;touch-action:none}
   .wmsg{min-height:30px;font-family:'Jua',sans-serif;font-size:20px;color:#6b5f73;margin:4px 0}
@@ -1300,8 +1308,7 @@ window.addEventListener("hashchange",fromHash);
   function jVar(p,n){ /* 낱자 하나를 비슷한 낱자로 바꾼 틀린 조합들 */
     const out=[];p.forEach((j,i)=>{if(!j)return;simOf(j).forEach(s=>{if(i===0&&CHO.indexOf(s)<0)return;if(i===1&&JUNG.indexOf(s)<0)return;if(i===2&&JONG.indexOf(s)<1)return;const q=p.slice();q[i]=s;out.push(q);});});
     return shuffle(out).slice(0,n);}
-  function jGen(i){
-    const t=["split","join","first","name","jong"][Math.floor(i/2+day())%5];
+  function jGen0(t){
     if(t==="split"||t==="join"){const s=pick(JSYL),p=hDec(s),vs=jVar(p,8);
       if(t==="split"){const c=fmtJ(p);return mkQ(`<div class="skbig">${s}</div><div class="skq">'${jo(s,"'을","'를")} 낱자로 나누면?</div>`,c,padW(c,vs.map(fmtJ),[]),`<b>${s}</b> = ${p.filter(Boolean).join(" + ")}`);}
       return mkQ(`<div class="skbig">${p.filter(Boolean).join(" + ")}</div><div class="skq">낱자를 합치면 어떤 글자가 될까?</div>`,s,padW(s,vs.map(q=>hCom(q[0],q[1],q[2])),[]),`${p.filter(Boolean).join(" + ")} = <b>${s}</b>`,{});}
@@ -1358,10 +1365,47 @@ window.addEventListener("hashchange",fromHash);
   const WHARD="ㄱㄴㄷㄹㅁㅈㅊㅋㅌㅎ".split("");
   const wItem=()=>{const n=M.wi||0;return n<WCUR.length?WCUR[n]:WHARD[(n-WCUR.length)%WHARD.length];};
   const wNote=ch=>{const S=wStrokes(ch),bend=S.filter(s=>s.length===3).length;return `<b>${ch}</b> → ${S.length}획이에요${bend?` · 꺾어 쓰는 획 ${bend}개`:""}`;};
+  /* --- 한글 단계: 1 낱자 → 2 자음+모음 → 3 받침 글자 섞기 → 4 받아쓰기 (겹받침은 당분간 뺌) --- */
+  const HST=[0,60,140,240];/* 단계가 바뀌는 누적 완료 수 */
+  const hSt=()=>{const n=M.hp||0;return n>=HST[3]?4:n>=HST[2]?3:n>=HST[1]?2:1;};
+  const hpUp=()=>{if(SK.s==="k"&&!SK.free){M.hp=(M.hp||0)+1;save();}};
+  const JB="ㄱㄴㄹㅁㅂㅅㅇ";/* 받침은 쉬운 홑받침만 */
+  const basic=j=>JA.includes(j)||MO.includes(j);
+  const sylCV=()=>hCom(pick(JA.split("")),pick(MO.split("")));
+  const sylCVC=()=>hCom(pick(JA.split("")),pick("ㅏㅓㅗㅜㅡㅣ".split("")),pick(JB.split("")));
+  const sylAt=st=>st<=2?sylCV():Math.random()<.5?sylCV():sylCVC();
+  const bVar=(p,n)=>jVar(p,20).filter(q=>q.every(j=>!j||basic(j))&&(!q[2]||JB.includes(q[2]))).slice(0,n);
+  function hQuiz(t,st){
+    if(t==="name"||t==="first")return jGen0(t);
+    if(t==="cfind"||t==="vfind"){const c=pick(JA.split("")),v=pick(MO.split("")),s=hCom(c,v);
+      const ws=(t==="cfind"?simOf(c).filter(k=>JA.includes(k)).map(k=>hCom(k,v)):simOf(v).filter(k=>MO.includes(k)).map(k=>hCom(c,k)));
+      const pool=t==="cfind"?JA.split("").filter(k=>k!==c).map(k=>hCom(k,v)):MO.split("").filter(k=>k!==v).map(k=>hCom(c,k));
+      const j=t==="cfind"?c:v;return mkQ(`<div class="skbig">${j}</div><div class="skq">'${j}'${t==="cfind"?"(이)가":"가"} 들어 있는 글자는?</div>`,s,padW(s,ws,pool),`<b>${s}</b> = ${c} + ${v}`);}
+    const s=t==="jong"?sylCVC():sylAt(st),p=hDec(s),vs=bVar(p,8);
+    if(t==="split"){const c=fmtJ(p);return mkQ(`<div class="skbig">${s}</div><div class="skq">'${jo(s,"'을","'를")} 낱자로 나누면?</div>`,c,padW(c,vs.map(fmtJ),[]),`<b>${s}</b> = ${p.filter(Boolean).join(" + ")}`);}
+    if(t==="join")return mkQ(`<div class="skbig">${p.filter(Boolean).join(" + ")}</div><div class="skq">낱자를 합치면 어떤 글자가 될까?</div>`,s,padW(s,vs.map(q=>hCom(q[0],q[1],q[2])),[]),`${p.filter(Boolean).join(" + ")} = <b>${s}</b>`,{});
+    const c=p[2];return mkQ(`<div class="skbig">${s}</div><div class="skq">'${s}'의 받침(아래에 받친 낱자)은?</div>`,c,padW(c,simOf(c).filter(k=>JA.includes(k)),JA.split("")),`<b>${s}</b> = ${p.join(" + ")} → 받침은 <b>${c}</b>`);
+  }
+  const J24=JA+MO;
+  function wPick(st){
+    if(st===1){const n=M.wi||0;return J24[n%J24.length];}
+    if(st===4&&Math.random()<.3)return pick(WHARD);
+    return sylAt(st);
+  }
+  /* 받아쓰기 낱말 (소리와 글자가 같은 낱말, 쌍자음·겹받침·ㅐㅔ 없음) */
+  const DW=[["바다","🌊"],["나비","🦋"],["모자","🧢"],["사자","🦁"],["우유","🥛"],["오리","🦆"],["기차","🚂"],["포도","🍇"],["하마","🦛"],["고래","🐋"],["거미","🕷️"],["치마","👗"],["피자","🍕"],["구두","👞"],["나무","🌳"],["가지","🍆"],["주스","🧃"],["두부","🧈"],["모기","🦟"],["호두","🌰"],
+    ["곰","🐻"],["달","🌙"],["별","⭐"],["문","🚪"],["손","✋"],["발","🦶"],["공","⚽"],["집","🏠"],["눈","⛄"],["물","💧"],["산","⛰️"],["수박","🍉"],["사탕","🍬"],["자석","🧲"],["가방","🎒"],["하늘","🌌"],["구름","☁️"],["바람","🌬️"],["사슴","🦌"],["호박","🎃"],["오징어","🦑"],["거북","🐢"],["고양이","🐱"],["연필","✏️"],["시소","🛝"]];
+  const sayKo=t=>{try{const s=window.speechSynthesis;if(!s)return;s.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="ko-KR";u.rate=.7;s.speak(u);}catch(e){}};
+  let dUsed={};
+  const dNew=()=>{let c=DW.filter(x=>!dUsed[x[0]]);if(!c.length){dUsed={};c=DW;}const x=pick(c);dUsed[x[0]]=1;return x;};
+  const HPLAN={1:["w","name","w",["cfind","vfind"],"first"],2:["w","join","w","split",["cfind","vfind"]],3:["w","join","w","split","jong"],4:["d","w","d",["join","split","jong"],"d"]};
   function kGen(i){
-    const t0=["w","j","w","j","r"][i%5];
-    if(t0==="w")return {w:1,ch:wItem()};
-    if(t0==="j")return jGen(i);
+    const st=hSt(),t0=HPLAN[st][i%5],t=Array.isArray(t0)?t0[(Math.floor(i/5)+day())%t0.length]:t0;
+    if(t==="w")return {w:1,ch:wPick(st)};
+    if(t==="d")return {dict:1,d:dNew()};
+    return hQuiz(t,st);
+  }
+  function kGenOld(i){
     const t=["r","f","p"][day()%3];
     if(t==="r"){const x=kNew(KREAD,t);return mkQ(`<div class="skbig sm">${x[0]}</div><div class="skq">읽고, 맞는 그림을 골라요</div>`,x[1],padW(x[1],x[2],KREAD.flatMap(y=>[y[1]].concat(y[2]))),`<b>${x[0]}</b> ${x[1]}`,{em:1});}
     if(t==="f"){const x=kNew(KFILL,t);return mkQ(`<div class="skem">${x[3]}</div><div class="skbig sm">${x[0]}</div><div class="skq">○에 들어갈, 바르게 쓴 말은?</div>`,x[1],padW(x[1],x[2],kAlt(x[1])),`<b>${x[0].replace(/○+/,x[1])}</b>`);}
@@ -1398,22 +1442,30 @@ window.addEventListener("hashchange",fromHash);
   /* --- 영어: 파닉스 --- */
   const say=t=>{try{const s=window.speechSynthesis;if(!s)return;s.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.75;s.speak(u);}catch(e){}};
   const EW=[["cat","🐱","고양이"],["dog","🐶","개"],["pig","🐷","돼지"],["hen","🐔","암탉"],["bug","🐛","벌레"],["sun","☀️","해"],["bed","🛏️","침대"],["cup","🥤","컵"],["bus","🚌","버스"],["hat","🎩","모자"],["pen","🖊️","펜"],["map","🗺️","지도"],["fox","🦊","여우"],["bat","🦇","박쥐"],["box","📦","상자"],["net","🥅","그물"],["pot","🍲","냄비"],["bag","👜","가방"],["van","🚐","승합차"],["web","🕸️","거미줄"],["leg","🦵","다리"],["lip","👄","입술"],["nut","🥜","땅콩"],["mug","☕","머그잔"],["ten","🔟","열"],["pan","🍳","프라이팬"],["cap","🧢","야구 모자"],["red","🔴","빨간색"],["jet","✈️","제트기"],["rat","🐀","쥐"],["six","6️⃣","여섯"],["wet","💧","젖은"],["hot","🥵","뜨거운"],["sad","😢","슬픈"],["hug","🤗","안아 주기"]];
+  /* 조금 더 어려운 낱말: 겹자음(fr·tr·sn…), 두 글자 소리(sh·ch·th), 긴 모음, 몸·병원 낱말 */
+  const EW2=[["frog","🐸","개구리"],["ship","🚢","배"],["fish","🐟","물고기"],["duck","🦆","오리"],["crab","🦀","게"],["snake","🐍","뱀"],["clock","⏰","시계"],["train","🚆","기차"],["truck","🚚","트럭"],["sheep","🐑","양"],["chick","🐤","병아리"],["chair","🪑","의자"],["cheese","🧀","치즈"],["bread","🍞","빵"],
+    ["tooth","🦷","이"],["brush","🪥","칫솔"],["drum","🥁","북"],["star","⭐","별"],["moon","🌙","달"],["tree","🌳","나무"],["kite","🪁","연"],["cake","🎂","케이크"],["bike","🚲","자전거"],["rose","🌹","장미"],["boat","⛵","돛단배"],["goat","🐐","염소"],["rain","🌧️","비"],["snail","🐌","달팽이"],
+    ["whale","🐋","고래"],["shark","🦈","상어"],["sock","🧦","양말"],["milk","🥛","우유"],["lamp","💡","전등"],["tent","⛺","텐트"],["gift","🎁","선물"],["hand","✋","손"],["nest","🪺","둥지"],["bone","🦴","뼈"],["pill","💊","알약"],["nose","👃","코"],["ear","👂","귀"],["eye","👁️","눈"],
+    ["heart","🫀","심장"],["brain","🧠","뇌"],["foot","🦶","발"],["sneeze","🤧","재채기"],["thumb","👍","엄지"],["queen","👸","여왕"],["frame","🖼️","액자"],["flag","🚩","깃발"],["plum","🍑","자두"],["grape","🍇","포도"],["skate","⛸️","스케이트"],["smile","😊","미소"],["spoon","🥄","숟가락"],["three","3️⃣","셋"]];
+  EW.push(...EW2);
   const ERH=[["cat","hat","bat","rat"],["hen","pen","ten"],["bug","mug","hug"],["map","cap"],["van","pan"],["net","jet","wet"],["pot","hot"],["fox","box"],["bed","red"]];
   const ew=w=>EW.find(x=>x[0]===w),ewl=x=>`${x[0]} ${x[1]} ${x[2]}`;
   let eUsed={};
   const eNew=L=>{let c=L.filter(x=>!eUsed[x[0]]);if(c.length<1){eUsed={};c=L;}const x=pick(c);eUsed[x[0]]=1;return x;};
   const eOther=(x,n,f)=>shuffle(EW.filter(y=>y[0]!==x[0]&&y[1]!==x[1]&&(!f||f(y)))).slice(0,n);
+  const eSim=(x,n)=>{const w=x[0],sc=y=>{const v=y[0];return (v.slice(0,2)===w.slice(0,2)?6:0)+(v[0]===w[0]?3:0)+(v.slice(-2)===w.slice(-2)?4:0)+(v.length===w.length?1:0)+Math.random()*2;};
+    return EW.filter(y=>y[0]!==x[0]&&y[1]!==x[1]).sort((a,b)=>sc(b)-sc(a)).slice(0,n);};
   const spk=w=>`<button class="skspk" data-say="${w}">🔊</button>`;
   function eGen(i){
-    const t=["hear","first","read","word","rhyme"][i%5];
+    const t=["hear","read","word","hear","read"][i%5];
     if(t==="rhyme"){const G=pick(ERH),a=pick(G),b=pick(G.filter(w=>w!==a)),ws=shuffle(EW.filter(y=>!G.includes(y[0])&&y[0].slice(1)!==a.slice(1))).slice(0,NO-1);
       return mkQ(`<div class="skbig en">${a} ${ew(a)[1]}</div>${spk(a)}<div class="skq">끝소리가 같은 낱말은?</div>`,`<span class="en">${b}</span> ${ew(b)[1]}`,ws.map(y=>`<span class="en">${y[0]}</span> ${y[1]}`),`<span class="en">${a}</span> – <span class="en">${b}</span><br>둘 다 <b class="en">-${a.slice(1)}</b> 소리로 끝나요.`,{snd:a,after:a+", "+b});}
-    const x=eNew(EW);
-    if(t==="hear")return mkQ(`${spk(x[0])}<div class="skq">잘 듣고, 맞는 그림을 골라요</div>`,x[1],eOther(x,NO-1).map(y=>y[1]),`<span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{snd:x[0],em:1,after:x[0]});
+    const x=eNew(Math.random()<.75?EW2:EW);
+    if(t==="hear")return mkQ(`${spk(x[0])}<div class="skq">잘 듣고, 맞는 그림을 골라요</div>`,x[1],eSim(x,NO-1).map(y=>y[1]),`<span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{snd:x[0],em:1,after:x[0]});
     if(t==="first"){const c=x[0][0],bad=c==="c"?"k":c==="k"?"c":"",ls=shuffle("bdpmnhtsrlfgwjv".split("").filter(l=>l!==c&&l!==bad)).slice(0,NO-1);
       return mkQ(`<div class="skem">${x[1]}</div>${spk(x[0])}<div class="skq">첫소리 글자는?</div>`,c,ls,`<b class="en">${c}</b> → <span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{snd:x[0],em:1,en:1,after:x[0]});}
-    if(t==="read")return mkQ(`<div class="skbig en">${x[0]}</div><div class="skq">읽고, 맞는 그림을 골라요</div>`,x[1],eOther(x,NO-1).map(y=>y[1]),`<span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{em:1,after:x[0]});
-    let ws=eOther(x,NO-1,y=>y[0][0]===x[0][0]||y[0].slice(1)===x[0].slice(1));if(ws.length<NO-1)ws=ws.concat(eOther(x,8,y=>!ws.includes(y))).slice(0,NO-1);
+    if(t==="read")return mkQ(`<div class="skbig en">${x[0]}</div><div class="skq">읽고, 맞는 그림을 골라요</div>`,x[1],eSim(x,NO-1).map(y=>y[1]),`<span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{em:1,after:x[0]});
+    const ws=eSim(x,NO-1);
     return mkQ(`<div class="skem">${x[1]}</div><div class="skq">${x[2]} — 맞는 낱말은?</div>`,x[0],ws.map(y=>y[0]),`<span class="en">${x[0]}</span> ${x[1]} ${x[2]}`,{en:1,after:x[0]});
   }
   const SGEN={k:kGen,m:mGen,e:eGen};
@@ -1542,7 +1594,7 @@ window.addEventListener("hashchange",fromHash);
       SK={s:k,i:c%SNS[k],free:c>=SNS[k],n:0};skNext();});
     const h=g("skHome");if(h)h.onclick=()=>{SFX("pop");goPlace("home");};
   }
-  function skNext(){SK.q=SGEN[SK.s](SK.i+SK.n);SK.done=false;if(SK.q.w)drawW();else drawQ();}
+  function skNext(){SK.q=SGEN[SK.s](SK.i+SK.n);SK.done=false;if(SK.q.w)drawW();else if(SK.q.dict)drawD();else drawQ();}
   function drawQ(){
     const el=g("skMain"),q=SK.q,S=SUB[SK.s],n=sdGet()[SKEY.indexOf(SK.s)];
     el.innerHTML=`<div class="skbar"><button class="chipb" id="skBack">← 공부방</button><span style="color:${S[2]}">${S[0]} ${S[1]}</span>${SK.free?`<small>연습</small>`:dots(n,S[2],SNS[SK.s])}</div>
@@ -1556,7 +1608,7 @@ window.addEventListener("hashchange",fromHash);
       if(SK.done||b.classList.contains("bad"))return;const ok=Number(b.dataset.i)===q.a;
       if(!ok){SK.miss++;b.classList.add("bad");b.disabled=true;SFX("no");
         g("skAns").innerHTML=`<div class="skwhy no"><b>${SK.miss>=2?"아깝다! 한 번 더 생각해 봐 💭":"다시 찾아볼까? 🔍"}</b><p>${SK.miss>=2?"문제를 천천히 다시 읽어 봐요.":"남은 보기 중에서 맞는 것을 골라 봐요."}</p></div>`;return;}
-      SK.done=true;
+      SK.done=true;hpUp();
       el.querySelectorAll(".skopt").forEach((x,i)=>{if(i===q.a)x.classList.add("good");else if(!x.classList.contains("bad"))x.classList.add("dim");});
       SFX("ok");if(q.after)setTimeout(()=>say(q.after),500);
       const first=SK.miss===0;let fin=false;
@@ -1619,7 +1671,7 @@ window.addEventListener("hashchange",fromHash);
       anim=requestAnimationFrame(step);}
     function finish(){done=true;draw();SFX("ok");msg("","");
       let fin=false;if(!SK.free){const a=sdGet();a[0]=Math.min(SNS.k,a[0]+1);sdSet(a);fin=a[0]>=SNS.k;}
-      if(!SK.free&&SK.q.ch===wItem()){M.wi=(M.wi||0)+1;save();}
+      hpUp();if(!SK.free&&hSt()===1&&SK.q.ch===J24[(M.wi||0)%J24.length]){M.wi=(M.wi||0)+1;save();}
       SK.n++;
       g("skAns").innerHTML=`<div class="skwhy ok"><b>⭕ ${miss?"끝까지 잘 썼어요!":"순서대로 아주 잘 썼어요!"}</b><p>${wNote(ch)}</p></div><button class="hbtn" id="skGo" style="background:${S[2]}">${fin?"다 했어요 ✅":"다음 ▶"}</button>`;
       g("skGo").onclick=()=>{if(fin||(SK.free&&SK.n>=SNS.k))skFinish();else skNext();};
@@ -1631,6 +1683,35 @@ window.addEventListener("hashchange",fromHash);
     g("wShow").onclick=()=>{SFX("pop");show(false);};
     g("wAgain").onclick=()=>{if(done)return;SFX("pop");cur=0;miss=0;msg("");draw();};
     fitCv();draw();msg(`초록 점 🟢 <b>1</b>번에서 시작해 화살표 쪽으로 써요`);
+  }
+  /* 받아쓰기: 듣고 낱자 카드를 차례로 눌러 낱말 만들기 */
+  function drawD(){
+    const el=g("skMain"),S=SUB.k,[word,emo]=SK.q.d,n=sdGet()[0];
+    const P=[...word].map(hDec),seq=P.flatMap(p=>p.filter(Boolean));
+    const need=[...new Set(seq)],ex=shuffle(need.flatMap(j=>simOf(j).filter(basic))).filter(j=>!need.includes(j));
+    const tiles=shuffle(need.concat([...new Set(ex)].slice(0,Math.max(3,9-need.length))));
+    let k=0,miss=0,done=false;
+    const shown=()=>{let left=k,out="";P.forEach(p=>{const m=p.filter(Boolean),t=Math.min(left,m.length);left-=t;
+      out+=`<span class="dslot${t?" on":""}">${t===0?"":t===1?m[0]:t===2?hCom(m[0],m[1]):hCom(m[0],m[1],m[2])}</span>`;});return out;};
+    el.innerHTML=`<div class="skbar"><button class="chipb" id="skBack">← 공부방</button><span style="color:${S[2]}">${S[0]} ${S[1]}</span>${SK.free?`<small>연습</small>`:dots(n,S[2],SNS.k)}</div>
+      <div class="skcard"><div class="skq">🎧 받아쓰기 — 잘 듣고, 낱자를 차례대로 눌러요</div>
+      <button class="skspk big" id="dSay">🔊 다시 듣기</button>
+      <div class="dword" id="dWord">${shown()}</div>
+      <div class="dtiles">${tiles.map(j=>`<button class="dtile" data-j="${j}">${j}</button>`).join("")}</div>
+      <div class="wmsg" id="wMsg">첫소리부터 차례대로 눌러요</div><div class="skans" id="skAns"></div></div>`;
+    g("skBack").onclick=()=>{SFX("pop");drawStudy();};
+    g("dSay").onclick=()=>sayKo(word);setTimeout(()=>sayKo(word),350);
+    el.querySelectorAll(".dtile").forEach(b=>b.onclick=()=>{if(done)return;
+      if(b.dataset.j===seq[k]){k++;SFX("pop");g("dWord").innerHTML=shown();g("wMsg").className="wmsg";g("wMsg").textContent=k<seq.length?"좋아요! 다음 낱자는?":"";
+        if(k>=seq.length)finish();return;}
+      miss++;SFX("no");b.classList.remove("shake");void b.offsetWidth;b.classList.add("shake");
+      g("wMsg").className="wmsg no";g("wMsg").innerHTML=miss>=3?"천천히 다시 들어 봐요 🔊":"다시 들어 볼까? 🎧";if(miss>=3||miss%2===0)sayKo(word);});
+    function finish(){done=true;SFX("ok");hpUp();
+      let fin=false;if(!SK.free){const a=sdGet();a[0]=Math.min(SNS.k,a[0]+1);sdSet(a);fin=a[0]>=SNS.k;}
+      SK.n++;
+      g("skAns").innerHTML=`<div class="skwhy ok"><b>⭕ ${miss?"끝까지 잘 썼어요!":"한 번에 바르게 썼어요!"}</b><p><span style="font-size:40px">${emo}</span> <b>${word}</b> = ${P.map(p=>p.filter(Boolean).join(" + ")).join(" / ")}</p></div><button class="hbtn" id="skGo" style="background:${S[2]}">${fin?"다 했어요 ✅":"다음 ▶"}</button>`;
+      g("skGo").onclick=()=>{if(fin||(SK.free&&SK.n>=SNS.k))skFinish();else skNext();};
+      g("skGo").scrollIntoView({block:"nearest",behavior:"smooth"});}
   }
   function bWait(){
     const el=g("skMain"),S=SUB.b;
