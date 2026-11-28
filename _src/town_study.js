@@ -1,5 +1,5 @@
   /* ===== 공부방: 한글 · 연산 · 영어 5문제씩 → 출근 도장 → 마을 문 열림 ===== */
-  const SNS={k:3,m:5,e:5,b:3},SUB={k:["가","한글","#f08aa6"],m:["🔢","연산","#5aa9e6"],e:["🔤","영어","#58b88f"],b:["📖","독서","#e0973c"]},SKEY=["k","m","e","b"];
+  const SNS={k:5,m:5,e:5,b:3},SUB={k:["가","한글","#f08aa6"],m:["🔢","연산","#5aa9e6"],e:["🔤","영어","#58b88f"],b:["📖","독서","#e0973c"]},SKEY=["k","m","e","b"];
   const sbGet=()=>{const v=M.sb||0;return Math.floor(v/10)===day()?v%10:0;};
   const sdGet=()=>{const v=M.sd||0;if(Math.floor(v/216)!==day())return [0,0,0,sbGet()];const r=v%216;return [Math.floor(r/36),Math.floor(r/6)%6,r%6,sbGet()];};
   const sdSet=a=>{M.sd=day()*216+Math.min(5,a[0])*36+Math.min(5,a[1])*6+Math.min(5,a[2]);M.sb=day()*10+Math.min(9,a[3]||0);save();};
@@ -23,8 +23,90 @@
   const KPIC=[["🐔","꼬끼오! 무엇일까?","닭",["닥","닦"]],["8️⃣","이 수를 한글로 쓰면?","여덟",["여덜","여덥"]],["🪴","화분 속에 있는 것은?","흙",["흑","흘"]],["🏷️","물건이 얼마인지 알려 주는 것은?","값",["갑","갓"]],["🥚","달걀을 물에 넣고 익히는 것은?","삶기",["삼기","살기"]],["🪑","다리가 아플 때 의자에…","앉아요",["안자요","않아요"]],["📖","책을 펴고 글자를…","읽어요",["일거요","익어요"]],["🍕","피자를 똑같이 나눈 내 것은? 내 ○","몫",["목","못"]]];
   let kUsed={};
   const kNew=(L,t)=>{let c=L.filter(x=>!kUsed[t+x[0]]);if(!c.length){L.forEach(x=>{delete kUsed[t+x[0]];});c=L;}const x=pick(c);kUsed[t+x[0]]=1;return x;};
+  /* --- 한글: 낱자 알기 + 따라 쓰기(획순·꺾어쓰기) --- */
+  const CHO="ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ",JUNG="ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ",JONG=" ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ";
+  const hDec=s=>{const c=s.charCodeAt(0)-0xAC00;return [CHO[Math.floor(c/588)],JUNG[Math.floor(c%588/28)],JONG[c%28].trim()];};
+  const hCom=(a,b,c)=>String.fromCharCode(0xAC00+CHO.indexOf(a)*588+JUNG.indexOf(b)*28+(c?JONG.indexOf(c):0));
+  const JA="ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ",MO="ㅏㅑㅓㅕㅗㅛㅜㅠㅡㅣ";
+  const JNAME={"ㄱ":"기역","ㄴ":"니은","ㄷ":"디귿","ㄹ":"리을","ㅁ":"미음","ㅂ":"비읍","ㅅ":"시옷","ㅇ":"이응","ㅈ":"지읒","ㅊ":"치읓","ㅋ":"키읔","ㅌ":"티읕","ㅍ":"피읖","ㅎ":"히읗"};
+  /* 모양·소리가 비슷해서 헷갈리는 낱자 */
+  const JSIM={"ㄱ":"ㅋㄴㄷㄲ","ㄴ":"ㄷㄹㄱㅁ","ㄷ":"ㅌㄴㄹㅁ","ㄹ":"ㄷㄴㅌㅁ","ㅁ":"ㅂㅇㄷㅍ","ㅂ":"ㅍㅁㅃㄷ","ㅅ":"ㅈㅊㅆㅎ","ㅇ":"ㅎㅁㄴㅂ","ㅈ":"ㅊㅅㅉㄷ","ㅊ":"ㅈㅅㅎㅋ","ㅋ":"ㄱㅌㄲㅎ","ㅌ":"ㄷㅋㄹㅍ","ㅍ":"ㅂㅁㅌㅎ","ㅎ":"ㅇㅊㅅㅋ","ㄲ":"ㄱㅋㄸㅆ","ㅆ":"ㅅㅈㅉㄲ",
+    "ㅏ":"ㅓㅑㅗㅐ","ㅑ":"ㅏㅕㅛㅒ","ㅓ":"ㅏㅕㅜㅔ","ㅕ":"ㅓㅑㅠㅖ","ㅗ":"ㅜㅛㅏㅚ","ㅛ":"ㅗㅠㅑㅜ","ㅜ":"ㅗㅠㅓㅡ","ㅠ":"ㅜㅛㅕㅡ","ㅡ":"ㅣㅜㅗㅢ","ㅣ":"ㅡㅏㅓㅟ","ㅐ":"ㅔㅏㅒㅓ","ㅔ":"ㅐㅓㅖㅏ"};
+  const simOf=j=>(JSIM[j]||"").split("");
+  /* 첫소리 낱말 (그림, 낱말) */
+  const JW={"ㄱ":[["🚂","기차"],["🐋","고래"],["🕷️","거미"]],"ㄴ":[["🦋","나비"],["🌳","나무"],["🐢","느림보"]],"ㄷ":[["🐷","돼지"],["🌉","다리"],["🐿️","다람쥐"]],"ㄹ":[["🍜","라면"],["🤖","로봇"],["🍋","레몬"]],
+    "ㅁ":[["🧢","모자"],["🐴","말"],["🍈","멜론"]],"ㅂ":[["🍌","바나나"],["🚌","버스"],["⭐","별"]],"ㅅ":[["🍎","사과"],["🍉","수박"],["🦁","사자"]],"ㅇ":[["🦆","오리"],["🥛","우유"],["🦊","여우"]],
+    "ㅈ":[["🚗","자동차"],["💉","주사"],["🌏","지구"]],"ㅊ":[["🧀","치즈"],["🍒","체리"],["🪥","칫솔"]],"ㅋ":[["🐘","코끼리"],["🥝","키위"],["🍰","케이크"]],"ㅌ":[["🐰","토끼"],["🍅","토마토"],["🚚","트럭"]],
+    "ㅍ":[["🍇","포도"],["🍕","피자"],["🐧","펭귄"]],"ㅎ":[["🦛","하마"],["🐯","호랑이"],["☀️","해"]]};
+  const JSYL=["곰","달","밤","손","집","눈","문","강","별","물","공","발","숲","옷","산","귤","빵","콩","책","팔","해","소","코","배","무","새","게","오이","나비","포도"].map(w=>w[0]);
+  const jo=(w,a,b)=>w+((w.charCodeAt(w.length-1)-0xAC00)%28?a:b);
+  const fmtJ=a=>a.filter(Boolean).join(" ");
+  function jVar(p,n){ /* 낱자 하나를 비슷한 낱자로 바꾼 틀린 조합들 */
+    const out=[];p.forEach((j,i)=>{if(!j)return;simOf(j).forEach(s=>{if(i===0&&CHO.indexOf(s)<0)return;if(i===1&&JUNG.indexOf(s)<0)return;if(i===2&&JONG.indexOf(s)<1)return;const q=p.slice();q[i]=s;out.push(q);});});
+    return shuffle(out).slice(0,n);}
+  function jGen(i){
+    const t=["split","join","first","name","jong"][Math.floor(i/2+day())%5];
+    if(t==="split"||t==="join"){const s=pick(JSYL),p=hDec(s),vs=jVar(p,8);
+      if(t==="split"){const c=fmtJ(p);return mkQ(`<div class="skbig">${s}</div><div class="skq">'${jo(s,"'을","'를")} 낱자로 나누면?</div>`,c,padW(c,vs.map(fmtJ),[]),`<b>${s}</b> = ${p.filter(Boolean).join(" + ")}`);}
+      return mkQ(`<div class="skbig">${p.filter(Boolean).join(" + ")}</div><div class="skq">낱자를 합치면 어떤 글자가 될까?</div>`,s,padW(s,vs.map(q=>hCom(q[0],q[1],q[2])),[]),`${p.filter(Boolean).join(" + ")} = <b>${s}</b>`,{});}
+    if(t==="first"){const j=pick(JA.split("")),x=pick(JW[j]),others=simOf(j).filter(k=>JW[k]).concat(shuffle(JA.split("").filter(k=>k!==j&&!simOf(j).includes(k))));
+      const ws=[];others.forEach(k=>{if(ws.length<4){const y=pick(JW[k]);ws.push(y[0]+" "+y[1]);}});
+      return mkQ(`<div class="skbig">${j}</div><div class="skq">'${j}' 소리로 시작하는 낱말은?</div>`,x[0]+" "+x[1],ws,`<b>${jo(x[1],"</b>은","</b>는")} '${j}'로 시작해요: ${x[1][0]} = ${fmtJ(hDec(x[1][0]))}`);}
+    if(t==="name"){const j=pick(JA.split("")),c=JNAME[j],ws=simOf(j).filter(k=>JNAME[k]).map(k=>JNAME[k]);
+      return mkQ(`<div class="skbig">${j}</div><div class="skq">이 낱자의 이름은?</div>`,c,padW(c,ws,Object.values(JNAME)),`<b>${j}</b>의 이름은 <b>${c}</b>예요.`);}
+    const s=pick(JSYL.filter(x=>hDec(x)[2])),p=hDec(s),c=p[2];
+    return mkQ(`<div class="skbig">${s}</div><div class="skq">'${s}'의 받침(아래에 받친 낱자)은?</div>`,c,padW(c,simOf(c).filter(k=>JA.includes(k)),JA.split("")),`<b>${s}</b> = ${p.join(" + ")} → 받침은 <b>${c}</b>`);
+  }
+  /* 따라 쓰기: 낱자 획 (100칸 안의 좌표, 시작점→끝점 방향). 꺾어쓰기 획은 점이 3개 이상인 한 획 */
+  const ring=(cx,cy,r)=>Array.from({length:25},(_,k)=>{const t=k/24*Math.PI*2;return [cx-r*Math.sin(t),cy-r*Math.cos(t)];});
+  const WS={
+    "ㄱ":[[[20,22],[78,22],[78,82]]],
+    "ㄴ":[[[24,18],[24,78],[82,78]]],
+    "ㄷ":[[[22,22],[80,22]],[[22,22],[22,78],[82,78]]],
+    "ㄹ":[[[22,18],[78,18],[78,48]],[[22,48],[78,48]],[[22,48],[22,82],[82,82]]],
+    "ㅁ":[[[22,20],[22,80]],[[22,20],[78,20],[78,80]],[[22,80],[78,80]]],
+    "ㅂ":[[[24,16],[24,82]],[[76,16],[76,82]],[[24,48],[76,48]],[[24,82],[76,82]]],
+    "ㅅ":[[[50,16],[20,84]],[[46,50],[82,84]]],
+    "ㅇ":[ring(50,50,30)],
+    "ㅈ":[[[20,20],[76,20],[22,84]],[[48,50],[82,84]]],
+    "ㅊ":[[[50,6],[50,20]],[[20,28],[76,28],[22,88]],[[48,58],[82,88]]],
+    "ㅋ":[[[20,20],[78,20],[78,82]],[[20,50],[78,50]]],
+    "ㅌ":[[[22,18],[80,18]],[[22,48],[80,48]],[[22,18],[22,82],[82,82]]],
+    "ㅍ":[[[18,20],[82,20]],[[36,20],[36,80]],[[64,20],[64,80]],[[18,80],[82,80]]],
+    "ㅎ":[[[50,6],[50,18]],[[22,26],[78,26]],ring(50,62,22)],
+    "ㅏ":[[[40,10],[40,90]],[[40,50],[70,50]]],
+    "ㅑ":[[[38,10],[38,90]],[[38,38],[68,38]],[[38,62],[68,62]]],
+    "ㅓ":[[[30,50],[60,50]],[[60,10],[60,90]]],
+    "ㅕ":[[[30,38],[60,38]],[[30,62],[60,62]],[[60,10],[60,90]]],
+    "ㅗ":[[[50,30],[50,60]],[[10,60],[90,60]]],
+    "ㅛ":[[[38,30],[38,60]],[[62,30],[62,60]],[[10,60],[90,60]]],
+    "ㅜ":[[[10,40],[90,40]],[[50,40],[50,72]]],
+    "ㅠ":[[[10,40],[90,40]],[[38,40],[38,72]],[[62,40],[62,72]]],
+    "ㅐ":[[[30,10],[30,90]],[[30,50],[52,50]],[[62,10],[62,90]]],
+    "ㅡ":[[[10,50],[90,50]]],
+    "ㅣ":[[[50,10],[50,90]]]};
+  /* 낱자를 글자 안의 자리(r=[x1,y1,x2,y2])에 맞춰 넣기. 자음은 모양 비율 유지, 모음은 자리에 맞게 늘림 */
+  const fit=(S,r,keep)=>{const P=S.flat(),xs=P.map(p=>p[0]),ys=P.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys),w=x1-x0,h=y1-y0,W=r[2]-r[0],H=r[3]-r[1];
+    let sx=w?W/w:0,sy=h?H/h:0;if(keep){const k=Math.min(w?W/w:1e9,h?H/h:1e9);sx=sy=k;}if(!w)sx=sy;if(!h)sy=sx;
+    const cx=(r[0]+r[2])/2,cy=(r[1]+r[3])/2,mx=(x0+x1)/2,my=(y0+y1)/2;
+    return S.map(st=>st.map(([x,y])=>[cx+(x-mx)*sx,cy+(y-my)*sy]));};
+  function wStrokes(ch){
+    if(WS[ch])return WS[ch];
+    const [c,j,k]=hDec(ch),vert="ㅏㅐㅑㅓㅕㅣ".includes(j),down="ㅗㅛ".includes(j)?0:"ㅜㅠ".includes(j)?1:2;let R;
+    if(vert)R=k?[[10,8,46,46],[54,4,82,60],[26,66,74,94]]:[[8,22,48,78],[56,6,84,94]];
+    else if(!k)R=[[28,6,72,44],[[8,50,92,70],[8,54,92,90],[8,64,92,64]][down]];
+    else R=[[30,4,70,30],[[8,34,92,50],[8,36,92,58],[8,44,92,44]][down],[28,64,72,94]];
+    return fit(WS[c],R[0],1).concat(fit(WS[j],R[1]),k?fit(WS[k],R[2],1):[]);
+  }
+  const WCUR="ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎㅏㅑㅓㅕㅗㅛㅜㅠㅡㅣ".split("").concat("가 나 다 라 마 바 사 아 자 차 카 타 파 하 고 누 도 루 모 부 소 우 조 추 코 투 포 후 곰 눈 달 물 밤 손 집 책 콩 팥 강 별".split(" "));
+  const WHARD="ㄱㄴㄷㄹㅁㅈㅊㅋㅌㅎ".split("");
+  const wItem=()=>{const n=M.wi||0;return n<WCUR.length?WCUR[n]:WHARD[(n-WCUR.length)%WHARD.length];};
+  const wNote=ch=>{const S=wStrokes(ch),bend=S.filter(s=>s.length===3).length;return `<b>${ch}</b> → ${S.length}획이에요${bend?` · 꺾어 쓰는 획 ${bend}개`:""}`;};
   function kGen(i){
-    const t=["r","f","p","r","f"][i%5];
+    const t0=["w","j","w","j","r"][i%5];
+    if(t0==="w")return {w:1,ch:wItem()};
+    if(t0==="j")return jGen(i);
+    const t=["r","f","p"][day()%3];
     if(t==="r"){const x=kNew(KREAD,t);return mkQ(`<div class="skbig sm">${x[0]}</div><div class="skq">읽고, 맞는 그림을 골라요</div>`,x[1],padW(x[1],x[2],KREAD.flatMap(y=>[y[1]].concat(y[2]))),`<b>${x[0]}</b> ${x[1]}`,{em:1});}
     if(t==="f"){const x=kNew(KFILL,t);return mkQ(`<div class="skem">${x[3]}</div><div class="skbig sm">${x[0]}</div><div class="skq">○에 들어갈, 바르게 쓴 말은?</div>`,x[1],padW(x[1],x[2],kAlt(x[1])),`<b>${x[0].replace(/○+/,x[1])}</b>`);}
     const x=kNew(KPIC,"p");return mkQ(`<div class="skem">${x[0]}</div><div class="skq">${x[1]}</div>`,x[2],padW(x[2],x[3],kAlt(x[2])),`바르게 쓰면 <b>${x[2]}</b>`);
@@ -204,7 +286,7 @@
       SK={s:k,i:c%SNS[k],free:c>=SNS[k],n:0};skNext();});
     const h=g("skHome");if(h)h.onclick=()=>{SFX("pop");goPlace("home");};
   }
-  function skNext(){SK.q=SGEN[SK.s](SK.i+SK.n);SK.done=false;drawQ();}
+  function skNext(){SK.q=SGEN[SK.s](SK.i+SK.n);SK.done=false;if(SK.q.w)drawW();else drawQ();}
   function drawQ(){
     const el=g("skMain"),q=SK.q,S=SUB[SK.s],n=sdGet()[SKEY.indexOf(SK.s)];
     el.innerHTML=`<div class="skbar"><button class="chipb" id="skBack">← 공부방</button><span style="color:${S[2]}">${S[0]} ${S[1]}</span>${SK.free?`<small>연습</small>`:dots(n,S[2],SNS[SK.s])}</div>
@@ -230,6 +312,70 @@
     });
   }
   /* 독서: 책 읽기 → 문제 3개 (틀리면 책에서 다시 찾기) */
+  /* 따라 쓰기 화면 */
+  function drawW(){
+    const el=g("skMain"),S=SUB.k,ch=SK.q.ch,ST=wStrokes(ch),n=sdGet()[0];
+    el.innerHTML=`<div class="skbar"><button class="chipb" id="skBack">← 공부방</button><span style="color:${S[2]}">${S[0]} ${S[1]}</span>${SK.free?`<small>연습</small>`:dots(n,S[2],SNS.k)}</div>
+      <div class="skcard"><div class="skq">✍️ 순서대로 따라 써요${JNAME[ch]?` · <b>${ch}</b> (${JNAME[ch]})`:` · <b>${ch}</b>`}</div>
+      <div class="wbox"><canvas id="wCv"></canvas></div>
+      <div class="wmsg" id="wMsg"></div>
+      <div class="bknav"><button class="bkbtn" id="wShow">👀 쓰는 순서 보기</button><button class="bkbtn" id="wAgain">↺ 처음부터</button></div>
+      <div class="skans" id="skAns"></div></div>`;
+    g("skBack").onclick=()=>{SFX("pop");drawStudy();};
+    const cv=g("wCv"),ctx=cv.getContext("2d");let W=0,cur=0,miss=0,pts=null,anim=null,done=false;
+    const fitCv=()=>{const r=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;W=r.width;cv.width=W*d;cv.height=W*d;ctx.setTransform(d*W/100,0,0,d*W/100,0,0);};
+    const msg=(t,c)=>{g("wMsg").innerHTML=t;g("wMsg").className="wmsg"+(c?" "+c:"");};
+    const line=(p,col,w)=>{ctx.strokeStyle=col;ctx.lineWidth=w;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();p.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();};
+    function draw(dot){
+      ctx.clearRect(0,0,100,100);
+      ctx.setLineDash([2,2]);line([[50,0],[50,100]],"#f1d9e0",.5);line([[0,50],[100,50]],"#f1d9e0",.5);ctx.setLineDash([]);
+      ST.forEach((s,i)=>line(s,i<cur?S[2]:"#e9e4ee",i<cur?7:8));
+      if(cur<ST.length){const s=ST[cur],[x,y]=s[0],[x2,y2]=s[1],a=Math.atan2(y2-y,x2-x);
+        line(s,"#d8cfe3",8);
+        ctx.fillStyle="#3cb371";ctx.beginPath();ctx.arc(x,y,4.6,0,7);ctx.fill();
+        ctx.fillStyle="#fff";ctx.font="bold 6px Jua,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(cur+1,x,y+.3);
+        ctx.fillStyle="#3cb371";ctx.beginPath();const ax=x+Math.cos(a)*10,ay=y+Math.sin(a)*10;ctx.moveTo(ax+Math.cos(a)*3.5,ay+Math.sin(a)*3.5);ctx.lineTo(ax+Math.cos(a+2.4)*3.5,ay+Math.sin(a+2.4)*3.5);ctx.lineTo(ax+Math.cos(a-2.4)*3.5,ay+Math.sin(a-2.4)*3.5);ctx.fill();}
+      if(pts&&pts.length>1)line(pts,"#4a3f55",4.5);
+      if(dot){ctx.fillStyle="#ff6fa0";ctx.beginPath();ctx.arc(dot[0],dot[1],3.4,0,7);ctx.fill();}
+    }
+    const D=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+    const segD=(p,a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy;let t=L?((p[0]-a[0])*dx+(p[1]-a[1])*dy)/L:0;t=Math.max(0,Math.min(1,t));return D(p,[a[0]+t*dx,a[1]+t*dy]);};
+    const polyD=(p,s)=>{let m=1e9;for(let i=1;i<s.length;i++)m=Math.min(m,segD(p,s[i-1],s[i]));return m;};
+    const samp=s=>{const o=[];for(let i=1;i<s.length;i++){const L=D(s[i-1],s[i]),k=Math.max(1,Math.ceil(L/4));for(let j=0;j<=k;j++)o.push([s[i-1][0]+(s[i][0]-s[i-1][0])*j/k,s[i-1][1]+(s[i][1]-s[i-1][1])*j/k]);}return o;};
+    const R=13;
+    const match=(p,s)=>{if(p.length<2)return false;if(D(p[0],s[0])>R||D(p[p.length-1],s[s.length-1])>R)return false;
+      if(!samp(s).every(q=>p.some(r=>D(q,r)<=R)))return false;return p.filter(r=>polyD(r,s)<=R*1.3).length>=p.length*.85;};
+    function judge(p){
+      const s=ST[cur];
+      if(match(p,s)){cur++;SFX("pop");
+        if(cur>=ST.length){finish();return;}
+        msg(miss?"좋아요! 이어서 써 봐요":"잘했어요! 다음 획 ✨","ok");return;}
+      miss++;SFX("no");let t="점선을 따라 다시 써 볼까? ✍️";
+      if(ST.slice(cur+1).some(x=>match(p,x)))t=`순서가 달라요! 초록색 <b>${cur+1}</b>번부터 써요`;
+      else if(match(p.slice().reverse(),s))t="거꾸로 썼어요! 초록 점에서 출발해요 🟢";
+      else if(s.length===3&&D(p[0],s[0])<=R&&D(p[p.length-1],s[1])<=R)t="꺾이는 곳에서 손을 떼지 말고, <b>한 번에 꺾어</b> 써요! ↪";
+      else if(D(p[0],s[0])>R)t="초록 점에서 시작해요 🟢";
+      msg(t,"no");if(miss>=2&&miss%2===0)show(true);
+    }
+    function show(one){if(anim)cancelAnimationFrame(anim);const list=one?[cur]:ST.map((_,i)=>i).filter(i=>i>=cur);let k=0,t0=null;
+      const step=ts=>{if(t0===null)t0=ts;const s=ST[list[k]],P=samp(s),f=Math.min(1,(ts-t0)/900);draw(P[Math.floor(f*(P.length-1))]);
+        if(f<1)anim=requestAnimationFrame(step);else if(++k<list.length){t0=null;anim=requestAnimationFrame(step);}else{anim=null;setTimeout(()=>draw(),300);}};
+      anim=requestAnimationFrame(step);}
+    function finish(){done=true;draw();SFX("ok");msg("","");
+      let fin=false;if(!SK.free){const a=sdGet();a[0]=Math.min(SNS.k,a[0]+1);sdSet(a);fin=a[0]>=SNS.k;}
+      if(!SK.free&&SK.q.ch===wItem()){M.wi=(M.wi||0)+1;save();}
+      SK.n++;
+      g("skAns").innerHTML=`<div class="skwhy ok"><b>⭕ ${miss?"끝까지 잘 썼어요!":"순서대로 아주 잘 썼어요!"}</b><p>${wNote(ch)}</p></div><button class="hbtn" id="skGo" style="background:${S[2]}">${fin?"다 했어요 ✅":"다음 ▶"}</button>`;
+      g("skGo").onclick=()=>{if(fin||(SK.free&&SK.n>=SNS.k))skFinish();else skNext();};
+      g("skGo").scrollIntoView({block:"nearest",behavior:"smooth"});}
+    const pos=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)/r.width*100,(e.clientY-r.top)/r.height*100];};
+    cv.onpointerdown=e=>{if(done)return;if(anim){cancelAnimationFrame(anim);anim=null;}e.preventDefault();cv.setPointerCapture(e.pointerId);pts=[pos(e)];draw();};
+    cv.onpointermove=e=>{if(!pts)return;const p=pos(e);if(D(p,pts[pts.length-1])>1)pts.push(p);draw();};
+    cv.onpointerup=cv.onpointercancel=e=>{if(!pts)return;const p=pts;pts=null;if(p.length>1)judge(p);draw();};
+    g("wShow").onclick=()=>{SFX("pop");show(false);};
+    g("wAgain").onclick=()=>{if(done)return;SFX("pop");cur=0;miss=0;msg("");draw();};
+    fitCv();draw();msg(`초록 점 🟢 <b>1</b>번에서 시작해 화살표 쪽으로 써요`);
+  }
   function bWait(){
     const el=g("skMain"),S=SUB.b;
     el.innerHTML=`<div class="skbar"><button class="chipb" id="skBack">← 공부방</button><span style="color:${S[2]}">${S[0]} ${S[1]}</span></div><div class="skcard bk"><div class="bkcover"><div class="bkce">📦</div><div class="bkt">새 책이 오고 있어요</div><div class="skq">지금 있는 책은 모두 읽었어요! 대단해요 👏<br>새 책은 월요일에 도착해요. 오늘 독서는 쉬어도 돼요.</div></div></div>`;

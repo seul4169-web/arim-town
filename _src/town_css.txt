@@ -81,6 +81,10 @@
   .skhead{text-align:center;font-family:'Jua',sans-serif;font-size:19px;color:#2c6e9b;margin:8px 0 14px}
   .skgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
   @media (max-width:560px){.skgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .wbox{width:min(330px,74vw);aspect-ratio:1;margin:8px auto 4px;background:#fffdfb;border:3px solid #f3c6d4;border-radius:18px;touch-action:none}
+  .wbox canvas{width:100%;height:100%;display:block;touch-action:none}
+  .wmsg{min-height:30px;font-family:'Jua',sans-serif;font-size:20px;color:#6b5f73;margin:4px 0}
+  .wmsg.ok{color:#2e9b63}.wmsg.no{color:#d9577f}
   .skcard.bk{background:#fffaf0;box-shadow:0 4px 0 #ecd3a8}
   .bkcover{padding:18px 6px 8px}
   .bkce{font-size:96px;line-height:1.15}
